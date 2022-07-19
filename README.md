@@ -1,1 +1,1 @@
-# manga-downoalder
+# manga-downloader
