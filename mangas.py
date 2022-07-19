@@ -6,7 +6,7 @@ from PIL import Image
 class Site:#add new sites
     def __init__(self, link, last_chapter = None):
         #dictionary with valid sites
-        self.sites = {'https://mangadex.org': Mangadex, 'https://mangakakalot.com': Mangakakalot, 'https://mangadex.tv': Mangadextv, 'https://unionmangas.top': UnionMangas, 'https://mangasee123': Mangasee}
+        self.sites = {'https://mangadex.org': Mangadex, 'https://mangakakalot.com': Mangakakalot, 'https://mangadex.tv': Mangadextv, 'https://unionleitor.top': UnionMangas, 'https://mangasee123': Mangasee}
         link.lower()
         self.last_chapter = last_chapter
         self.link = link
@@ -136,7 +136,6 @@ class Mangadextv(Site):#last chapter and exception handling
         for i in soup:
             number = re.search(r'Chapter.*?[0-9|.]+', i.text).group()
             number = re.search(r'[0-9|.]+', number).group()
-            print(number)
             if number == last_chapter:
                 break
             chapters.append({'chapter_name': i.text, 'href': i['href']})
@@ -360,26 +359,30 @@ class Mangasee(Site):#last chapter exceptions
 
 
 mangas = [
-            ('https://mangasee123.com/manga/Tonikaku-Kawaii', '180'), #tonikaku
-            ('https://mangasee123.com/manga/Kaguya-Wants-To-Be-Confessed-To', '253'), #kaguya
-            # ('https://mangasee123.com/manga/Its-Difficult-To-Love-An-Otaku', '74'), #wotakoi
-            ('https://mangasee123.com/manga/Kanojo-Okarishimasu', '223'), #kanojo okarishimasu
-            ('https://mangasee123.com/manga/Kakkou-no-Iinazuke', '98'), #kakkou no iinazuke
-            ('https://mangasee123.com/manga/Spy-X-Family', '59'), #spy x family
-            ('https://mangasee123.com/manga/Gokushufudou-The-Way-Of-The-House-Husband', '87'), #gokushufudou
-            ('https://mangasee123.com/manga/Oshi-no-Ko', '70'), #oshi no ko
-            ('https://unionmangas.top/manga/kao-ni-denai-kashiwada-san-to-kao-ni-deru-ota-kun', '22'), #kao ni denai kashiwada san to kao ni deru ota kun
-            # ('https://mangakakalot.com/read-nq9sw158504865972', '64'), #jahy-sama
-            ('https://mangasee123.com/manga/Himeno-chan-ni-Koi-Ha-Mada-Hayai', '64'), #himeno
-            # ('https://mangadex.org/title/edf99f42-a1a2-458f-b482-7799872ec984', '106'), #fetiple
-            # ('https://mangadex.org/title/9903ac5f-b7ef-44ec-a7fd-a971c23473fd/koi-to-uso', '278'), #koi to uso
-            ('https://mangasee123.com/manga/Grand-Blue', '75'), #grand blue
-            ('https://mangasee123.com/manga/Gekkan-Shojo-Nozaki-Kun', '130'), #nozaki
-            ('https://mangasee123.com/manga/My-Senpai-Is-Annoying', '6'), #my senpai is annoying
-            ('https://mangasee123.com/manga/Kubo-san-wa-Boku-Mobu-wo-Yurusanai', '100'), #kubo
-            # ('https://mangasee123.com/manga/Life-Lessons-with-Uramichi-Oniisan', None), #uramichi
-            ('https://mangasee123.com/manga/Soredemo-Ayumu-wa-Yosetekuru', '141'), #Soredemo-Ayumu-wa-Yosetekuru
-            ('https://mangasee123.com/manga/Ijiranaide-Nagatoro-san', '99') #nagatoro
+            # ('https://mangasee123.com/manga/Tonikaku-Kawaii', '180'), #tonikaku
+            # ('https://mangasee123.com/manga/Kaguya-Wants-To-Be-Confessed-To', '253'), #kaguya
+            # # ('https://mangasee123.com/manga/Its-Difficult-To-Love-An-Otaku', '74'), #wotakoi
+            # ('https://mangasee123.com/manga/Kanojo-Okarishimasu', '223'), #kanojo okarishimasu
+            # ('https://mangasee123.com/manga/Kakkou-no-Iinazuke', '98'), #kakkou no iinazuke
+            # ('https://mangasee123.com/manga/Spy-X-Family', '59'), #spy x family
+            # ('https://mangasee123.com/manga/Gokushufudou-The-Way-Of-The-House-Husband', '87'), #gokushufudou
+            # ('https://mangasee123.com/manga/Oshi-no-Ko', '70'), #oshi no ko
+            # ('https://unionmangas.top/manga/kao-ni-denai-kashiwada-san-to-kao-ni-deru-ota-kun', '22'), #kao ni denai kashiwada san to kao ni deru ota kun
+            # # ('https://mangakakalot.com/read-nq9sw158504865972', '64'), #jahy-sama
+            # ('https://mangasee123.com/manga/Himeno-chan-ni-Koi-Ha-Mada-Hayai', '64'), #himeno
+            # # ('https://mangadex.org/title/edf99f42-a1a2-458f-b482-7799872ec984', '106'), #fetiple
+            # # ('https://mangadex.org/title/9903ac5f-b7ef-44ec-a7fd-a971c23473fd/koi-to-uso', '278'), #koi to uso
+            # ('https://mangasee123.com/manga/Grand-Blue', '75'), #grand blue
+            # ('https://mangasee123.com/manga/Gekkan-Shojo-Nozaki-Kun', '130'), #nozaki
+            # ('https://mangasee123.com/manga/My-Senpai-Is-Annoying', '6'), #my senpai is annoying
+            # ('https://mangasee123.com/manga/Kubo-san-wa-Boku-Mobu-wo-Yurusanai', '100'), #kubo
+            # # ('https://mangasee123.com/manga/Life-Lessons-with-Uramichi-Oniisan', None), #uramichi
+            # ('https://mangasee123.com/manga/Soredemo-Ayumu-wa-Yosetekuru', '141'), #Soredemo-Ayumu-wa-Yosetekuru
+            # ('https://mangasee123.com/manga/Ijiranaide-Nagatoro-san', '99') #nagatoro
+            ('https://mangasee123.com/manga/Tonikaku-Kawaii', '198'), #tonikaku
+            # ('https://mangakakalot.com/read-nq9sw158504865972', '73'), #jahy-sama
+            ('https://unionleitor.top/pagina-manga/sono-bisque-doll-wa-koi-wo-suru', '77'), #sonobisque doll
+            ('https://mangadex.tv/manga/manga-da980683','258')
         ]
 
 def main(mangas):
