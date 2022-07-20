@@ -33,7 +33,7 @@ class Mangasee(Site):#last chapter exceptions
             number = re.search(r' [+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)', title.text).group(0).removeprefix(' ')
             if number == last_chapter:
                 break
-            chapters.append({'chapter_name': title.text, 'href': re.search(r'https:.*\.html', item.text).group(0)})
+            chapters.append({'chapter_name': title.text, 'href': re.search(r'https:.*\.html', item.text).group(0), 'number':number})
 
         return chapters
 
