@@ -37,7 +37,7 @@ class Mangasee(Site):#last chapter exceptions
 
         return chapters
 
-    def download_chapters(self, chapters, path=os.getcwd(), threads=3):
+    def download_chapters(self, chapters, path, threads):
         '''chapters = list with json files of chapter objects
         path = path where the chapters are going to be safed'''
         def download(args):
