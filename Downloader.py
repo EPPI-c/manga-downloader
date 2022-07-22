@@ -1,11 +1,13 @@
-import sites as sites
 import os
+
+import sites
+
 
 class Downloader:
     def __init__(self, link) -> None:
         self.link = link
-        self.sites = {'https://mangasee123': sites.Mangasee}
-        for link, site in self.sites.items():
+        site_list = {'https://mangasee123': sites.Mangasee}
+        for link, site in site_list.items():
             if link in self.link:
                 self.site = site(self.link)
 

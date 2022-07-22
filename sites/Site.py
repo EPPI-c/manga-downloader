@@ -1,6 +1,9 @@
-import concurrent.futures, os
+import concurrent.futures
+import os
 from urllib.request import Request, urlopen
+
 from PIL import Image
+
 
 class Site:
 
@@ -41,7 +44,8 @@ class Site:
 
         except (IOError, SyntaxError):
             os.remove(image)
-            raise Exception('image Corrupted')
+            # raise Exception('image Corrupted')
+            return False
 
         return True
 

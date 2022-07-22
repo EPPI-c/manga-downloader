@@ -2,3 +2,5 @@ mangas/
 magazines/
 __pycache__/
 myenv/
+cbz/
+cbzsplitter.py

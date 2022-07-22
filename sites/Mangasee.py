@@ -1,7 +1,13 @@
-from .Site import Site
-import requests, re, os, json
-from bs4 import BeautifulSoup
+import json
+import os
+import re
 from urllib.request import Request, urlopen
+
+import requests
+from bs4 import BeautifulSoup
+
+from .Site import Site
+
 
 class Mangasee(Site):#last chapter exceptions
 
@@ -20,7 +26,7 @@ class Mangasee(Site):#last chapter exceptions
         'sec-fetch-dest': 'document',
         'accept-language': 'en-US,en;q=0.9',
     }
-    def get_chapters(self, last_chapter=None):
+    def get_chapters(self, last_chapter):
         chapters = []
         name = self.link.replace('https://mangasee123.com/manga/', '')
         link = f"https://mangasee123.com/rss/{name}.xml"
