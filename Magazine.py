@@ -33,7 +33,8 @@ class Manga():
         """transforms object in dictionary"""
         return {'name':self.name, 'link':self.link,'last_chapter':self.last_chapter, 'provider':self.provider}
 
-    def download(self, chapter_list, path=getcwd(), threads=3, update_last_chapter=True):
+    def download(self, chapter_list, path=None, threads=3, update_last_chapter=True):
+        if not path: path = join_path('mangas', self.name)
         if update_last_chapter:
             response = self.site.download_chapters(chapter_list, path, threads)
             self.last_chapter = chapter_list[0]['number']

@@ -26,7 +26,8 @@ class Mangasee(Site):#last chapter exceptions
         'sec-fetch-dest': 'document',
         'accept-language': 'en-US,en;q=0.9',
     }
-    def get_chapters(self, last_chapter):
+    def get_chapters(self, last_chapter) -> list:
+        '''gets a list of chapters until last_chapter, if last_chapter is None gets all chapters'''
         chapters = []
         name = self.link.replace('https://mangasee123.com/manga/', '')
         link = f"https://mangasee123.com/rss/{name}.xml"

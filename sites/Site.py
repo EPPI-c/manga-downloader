@@ -11,9 +11,10 @@ class Site:
         self.link = link
 
     def get_chapters(self, last_chapter=None):
+        '''gets a list of chapters until last_chapter, if last_chapter is None gets all chapters'''
         pass
 
-    def download_chapters(self, chapters, path, threads=3):
+    def download_chapters(self, chapters, path, name, threads=3):
         '''chapters = list with json files of chapter objects
         path = path where the chapters are going to be safed'''
         pass
