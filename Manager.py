@@ -27,11 +27,13 @@ class Manager:
 
 if __name__ == "__main__":
     PATH = 'magazines/myjump.yaml'
-    manager = Manager()
+    # manager = Manager()
 
-    # magazine = manager.get_magazine_config(PATH)
-    # # manager.dowload_magazine(magazine, path='mangas')
+    magazine = Magazine(path=PATH)
+    chapters = magazine.get_all_chapters()
+
+    magazine.download(chapter_dict=chapters, path='mangas')
     # print(magazine.mangas)
 
-    magazine = Magazine(path = PATH)
-    print(magazine.__dict__())
+    # magazine = Magazine(path = PATH)
+    # print(magazine.__dict__())

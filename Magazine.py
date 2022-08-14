@@ -6,7 +6,7 @@ import yaml
 import sites
 
 class Manga():
-    def __init__(self, link, name, last_chapter=None, provider=None):
+    def __init__(self, link:str, name:str, last_chapter:str=None, provider:str=None):
         self.name = name
         self.link = link
         self.last_chapter = last_chapter
@@ -19,10 +19,10 @@ class Manga():
         else:
             raise Exception('Site not supported')
 
-    def dowload_chapters(self, chapters, path=getcwd(), threads=3):
+    def dowload_chapters(self, chapters:list, path:str=getcwd(), threads:int=3):
         return self.site.download_chapters(chapters, path, threads)
 
-    def get_chapters(self, until_last=True):
+    def get_chapters(self, until_last:bool=True):
         """gets chapters of this manga"""
         if until_last:
             return self.site.get_chapters(self.last_chapter)
@@ -33,7 +33,8 @@ class Manga():
         """transforms object in dictionary"""
         return {'name':self.name, 'link':self.link,'last_chapter':self.last_chapter, 'provider':self.provider}
 
-    def download(self, chapter_list, path=None, threads=3, update_last_chapter=True):
+    def download(self, chapter_list:list, path:str=None, threads:int=3, update_last_chapter:bool=True):
+        if not chapter_list: return 0
         if not path: path = join_path('mangas', self.name)
         if update_last_chapter:
             response = self.site.download_chapters(chapter_list, path, threads)
@@ -44,7 +45,7 @@ class Manga():
 
 
 class Magazine():
-    def __init__(self, name=None, mangas=None, path=None):
+    def __init__(self, name:str=None, mangas:list[Manga]=None, path:str=None):
         if path:
             self.path = path
             with open(path, 'r') as f:
@@ -63,9 +64,9 @@ class Magazine():
 
         else: raise Exception('Must provide path or name and mangas')
 
-    def get_all_chapters(self, until_last=True) -> dict:
+    def get_all_chapters(self, until_last:bool=True) -> dict:
         """gets chapters from all mangas in this magazine"""
-        return {manga: manga.get_all_chapters(until_last) for manga in self.mangas}
+        return {manga: manga.get_chapters(until_last) for manga in self.mangas}
 
     def __dict__(self):
         """transforms object in dictionary"""
@@ -76,6 +77,6 @@ class Magazine():
         with open(self.path, 'w') as f:
             yaml.dump(self.__dict__(), f)
 
-    def download(self, chapter_list, path=getcwd(), threads=3, update_last_chapter=True):
-        for manga, chapters in chapter_list:
+    def download(self, chapter_dict:dict[Manga, list], path:str=getcwd(), threads:int=3, update_last_chapter:bool=True):
+        for manga, chapters in chapter_dict.items():
             manga.download(chapters, path, threads, update_last_chapter)
