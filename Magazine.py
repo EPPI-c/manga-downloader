@@ -12,7 +12,7 @@ class Manga():
         self.last_chapter = last_chapter
         self.provider = provider
 
-        for link, site in {'https://mangasee123': sites.Mangasee, 'https://mangakakalot': sites.Mangakakalot}.items():
+        for link, site in {'https://mangasee123': sites.Mangasee, 'https://mangakakalot': sites.Mangakakalot, 'https://mangayabu.top/':sites.Mangayabu}.items():
             if link in self.link:
                 self.site = site(self.link)
                 break
