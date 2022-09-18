@@ -55,6 +55,7 @@ class Mangayabu(Site):#add exceptions, last chapter, broken
                 soup = soup.find_all('img', class_='lazy scrollspy')
                 for link in soup:
                     links.append(link['data-src'])
+                counter = 0
                 for image in links:
                     counter += 1
                     imgname = os.path.join(path, f'{counter}.jpg')
