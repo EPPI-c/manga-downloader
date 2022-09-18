@@ -1,8 +1,12 @@
-import Site
+from .Site import Site
 import requests, re, os
 from bs4 import BeautifulSoup
 
 class Mangakakalot(Site):#add exceptions, last chapter, broken
+
+    def __init__(self, link) -> None:
+        super().__init__(link)
+
     headers = {
         'Referer': 'https://mangakakalot.com/',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36',
@@ -17,7 +21,7 @@ class Mangakakalot(Site):#add exceptions, last chapter, broken
             number = re.search(r'Chapter [0-9|.]+', i.text).group().removeprefix('Chapter ')
             if number == last_chapter:
                 break
-            chapters.append({'chapter_name': i['title'], 'href': i['href']})
+            chapters.append({'chapter_name': i['title'], 'href': i['href'], 'number':number})
 
         return chapters
 
@@ -42,7 +46,7 @@ class Mangakakalot(Site):#add exceptions, last chapter, broken
                     os.mkdir(path)
                 r = requests.get(chapter['href'])
                 soup = BeautifulSoup(r.content, 'html5lib')
-                links = soup.find_all('img')
+                links = soup.find_all(title=re.compile(chapter['chapter_name']))
                 counter = 0
                 for image in links:
                     counter += 1
