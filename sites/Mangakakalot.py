@@ -18,7 +18,10 @@ class Mangakakalot(Site):#add exceptions, last chapter, broken
         soup = soup.find_all(href=True)
         chapters = []
         for i in soup:
-            number = re.search(r'Chapter [0-9|.]+', i.text).group().removeprefix('Chapter ')
+            try:
+                number = re.search(r'(chapter)_?[0-9|.]+', i['href']).group().removeprefix('chapter_')
+            except:
+                continue
             if number == last_chapter:
                 break
             chapters.append({'chapter_name': i['title'], 'href': i['href'], 'number':number})
@@ -46,7 +49,7 @@ class Mangakakalot(Site):#add exceptions, last chapter, broken
                     os.mkdir(path)
                 r = requests.get(chapter['href'])
                 soup = BeautifulSoup(r.content, 'html5lib')
-                links = soup.find_all(title=re.compile(chapter['chapter_name']))
+                links = soup.find_all(title=re.compile(re.escape(chapter['chapter_name'])))
                 counter = 0
                 for image in links:
                     counter += 1
