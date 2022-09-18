@@ -22,6 +22,10 @@ class Manga():
     def dowload_chapters(self, chapters:list, path:str=getcwd(), threads:int=3):
         return self.site.download_chapters(chapters, path, threads)
 
+    def update_last_chapter(self, chapter_list:list):
+        if not chapter_list: return 0
+        self.last_chapter = chapter_list[0]['number']
+
     def get_chapters(self, until_last:bool=True):
         """gets chapters of this manga"""
         if until_last:
@@ -72,6 +76,10 @@ class Magazine():
         """transforms object in dictionary"""
         return {'name': self.name, 'mangas':{manga.name:manga.__dict__() for manga in self.mangas}}
 
+    def update_last_chapter(self, chapter_dict:dict[Manga, list]):
+        for manga, chapters in chapter_dict.items():
+            manga.update_last_chapter(chapters)
+
     def update(self):
         """safes the object to yaml file"""
         with open(self.path, 'w') as f:
@@ -80,3 +88,5 @@ class Magazine():
     def download(self, chapter_dict:dict[Manga, list], path:str=getcwd(), threads:int=3, update_last_chapter:bool=True):
         for manga, chapters in chapter_dict.items():
             manga.download(chapters, path, threads, update_last_chapter)
+        if update_last_chapter:
+            self.update()
