@@ -4,8 +4,8 @@ from bs4 import BeautifulSoup
 
 class Manganato(Site):#add exceptions, last chapter, broken
 
-    def __init__(self, link) -> None:
-        super().__init__(link)
+    def __init__(self, link, name) -> None:
+        super().__init__(link, name)
 
     headers = {
         'Referer': 'https://manganato.com/',

@@ -26,7 +26,8 @@ class Manager:
             yaml.dump(magazine, f)
 
 if __name__ == "__main__":
-    PATH = 'magazines/myjump.yaml'
+    #PATH = 'magazines/myjump.yaml'
+    PATH = 'magazines/unique.yaml'
     # manager = Manager()
 
     magazine = Magazine(path=PATH)

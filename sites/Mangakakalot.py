@@ -4,8 +4,8 @@ from bs4 import BeautifulSoup
 
 class Mangakakalot(Site):#add exceptions, last chapter, broken
 
-    def __init__(self, link) -> None:
-        super().__init__(link)
+    def __init__(self, link, name) -> None:
+        super().__init__(link, name)
 
     headers = {
         'Referer': 'https://mangakakalot.com/',
@@ -19,19 +19,21 @@ class Mangakakalot(Site):#add exceptions, last chapter, broken
         chapters = []
         for i in soup:
             try:
-                number = re.search(r'(chapter)_?[0-9|.]+', i['href']).group().removeprefix('chapter_')
+                chap_num = re.search(r'((c|C)hapter?)(_| |-)?[0-9|.]+', i['href']).group()
+                number = float(re.sub(r'((c|C)hapter?)(_| |-)?','',chap_num))
+                title = self.name + ' ' + str(number)
             except:
                 continue
-            if number == last_chapter:
+            if number == float(last_chapter):
                 break
-            chapters.append({'chapter_name': i['title'], 'href': i['href'], 'number':number})
+            chapters.append({'chapter_name': title, 'href': i['href'], 'number':number})
 
         return chapters
 
-    def download_chapters(self, chapters, path=os.getcwd(), threads=3):# save last chapter
+    def download_chapters(self, chapters, path=os.getcwd(), threads=6):# save last chapter
         def download(args):
             def downloadimg(image, path):
-                r = requests.get(image['src'], headers = self.headers, stream = True)
+                r = requests.get(image, headers = self.headers, stream = True)
                 with open(path, 'wb') as f:
                     for chunk in r:
                         f.write(chunk)
@@ -49,10 +51,12 @@ class Mangakakalot(Site):#add exceptions, last chapter, broken
                     os.mkdir(path)
                 r = requests.get(chapter['href'])
                 soup = BeautifulSoup(r.content, 'html5lib')
-                links = soup.find_all(title=re.compile(re.escape(chapter['chapter_name'])))
+                soup = soup.find("div", class_="container-chapter-reader") 
+                soup = soup.find_all('img')
                 counter = 0
-                for image in links:
+                for image in soup:
                     counter += 1
+                    image = image.get('src')
                     imgname = os.path.join(path, f'{counter}.jpg')
                     downloadimg(image, imgname)
 
