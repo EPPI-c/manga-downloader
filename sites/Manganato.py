@@ -19,10 +19,10 @@ class Manganato(Site):#add exceptions, last chapter, broken
         chapters = []
         for i in soup:
             try:
-                number = re.search(r'(chapter)-?[0-9|.]+', i['href']).group().removeprefix('chapter-')
+                number = float(re.search(r'(chapter)-?[0-9|.]+', i['href']).group().removeprefix('chapter-'))
             except:
                 continue
-            if number == last_chapter:
+            if number == float(last_chapter):
                 break
             chapters.append({'chapter_name': i['title'], 'href': i['href'], 'number':number})
 

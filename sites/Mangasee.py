@@ -37,8 +37,8 @@ class Mangasee(Site):#last chapter exceptions
         items = soup.find_all('item')
         for item in items:
             title = item.find('title')
-            number = re.search(r' [+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)', title.text).group(0).removeprefix(' ')
-            if number == last_chapter:
+            number = float(re.search(r' [+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)', title.text).group(0).removeprefix(' '))
+            if number == float(last_chapter):
                 break
             chapters.append({'chapter_name': title.text, 'href': re.search(r'https:.*\.html', item.text).group(0), 'number':number})
 

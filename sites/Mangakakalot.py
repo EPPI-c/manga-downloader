@@ -1,19 +1,21 @@
+import asyncio
 from .Site import Site
-import requests, re, os
+import re, os
 from bs4 import BeautifulSoup
 
 class Mangakakalot(Site):#add exceptions, last chapter, broken
 
-    def __init__(self, link, name) -> None:
-        super().__init__(link, name)
+    def __init__(self, link, name, workers) -> None:
+        super().__init__(link, name, workers)
 
     headers = {
         'Referer': 'https://mangakakalot.com/',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36',
     }
-    def get_chapters(self, last_chapter=None):
-        r = requests.get(self.link)
-        soup = BeautifulSoup(r.content, 'html5lib')
+    async def get_chapters(self, last_chapter=None):
+        r = await self.fetch_text(self.link)
+        if not r: return
+        soup = BeautifulSoup(r, 'html5lib')
         soup = soup.find("div", class_="chapter-list")
         soup = soup.find_all(href=True)
         chapters = []
@@ -30,37 +32,25 @@ class Mangakakalot(Site):#add exceptions, last chapter, broken
 
         return chapters
 
-    def download_chapters(self, chapters, path=os.getcwd(), threads=6):# save last chapter
-        def download(args):
-            def downloadimg(image, path):
-                r = requests.get(image, headers = self.headers, stream = True)
-                with open(path, 'wb') as f:
-                    for chunk in r:
-                        f.write(chunk)
-
-            for chapter in args[0]:
-                path = os.path.join(args[1], self._clean_file_name(chapter['chapter_name']))
-                if not os.path.exists(path):
-                    os.mkdir(path)
-                else:
-                    counter = 0
-                    cpath = path
-                    while os.path.exists(path):
-                        counter += 1
-                        path = cpath + f'({counter})'
-                    os.mkdir(path)
-                r = requests.get(chapter['href'])
-                soup = BeautifulSoup(r.content, 'html5lib')
-                soup = soup.find("div", class_="container-chapter-reader") 
-                soup = soup.find_all('img')
+    async def download_chapters(self, chapters, path):# save last chapter
+        for chapter in chapters:
+            path = os.path.join(path, self._clean_file_name(chapter['chapter_name']))
+            if not os.path.exists(path):
+                os.mkdir(path)
+            else: # create duplicate with (n)
                 counter = 0
-                for image in soup:
+                cpath = path
+                while os.path.exists(path):
                     counter += 1
-                    image = image.get('src')
-                    imgname = os.path.join(path, f'{counter}.jpg')
-                    downloadimg(image, imgname)
+                    path = cpath + f'({counter})'
+                os.mkdir(path)
 
-                    while not self._verifyimg(imgname):
-                        downloadimg(image, imgname)
-
-        self._run(path, chapters, threads, download)
+            r = await self.fetch_text(chapter['href'])
+            if not r: return
+            soup = BeautifulSoup(r, 'html5lib')
+            soup = soup.find("div", class_="container-chapter-reader") 
+            soup = soup.find_all('img')
+            counter = 0
+            images = [asyncio.ensure_future(self.fetch_image(image.get('src'), os.path.join(path, f'{i}.jpg')))
+                      for i, image in enumerate(soup,1)]
+            await asyncio.gather(*images)

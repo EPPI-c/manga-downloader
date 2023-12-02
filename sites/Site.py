@@ -1,28 +1,33 @@
-import concurrent.futures
 import os
-from urllib.request import Request, urlopen
+import asyncio
+import aiohttp
 
 from PIL import Image
 
+async def create_site(site, link, name, workers=3):
+    site = site(link, name, workers)
+    await site.init()
+    return site
 
 class Site:
 
-    def __init__(self, link, name) -> None:
+    def __init__(self, link, name, workers) -> None:
         self.link = link
         self.name = name
+        self.sem = asyncio.Semaphore(workers)
 
-    def get_chapters(self, last_chapter=None):
+    async def init(self):
+        self.session = aiohttp.ClientSession()
+
+
+    async def get_chapters(self, last_chapter=None):
         '''gets a list of chapters until last_chapter, if last_chapter is None gets all chapters'''
         pass
 
-    def download_chapters(self, chapters, path, name, threads=3):
+    async def download_chapters(self, chapters, path):
         '''chapters = list with json files of chapter objects
         path = path where the chapters are going to be safed'''
         pass
-
-    def _split(self, a, n):
-        k, m = divmod(len(a), n)
-        return (a[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(n))
 
     def _clean_file_name(self, file_name):
         invalid = '<>:"/\|?* '
@@ -31,11 +36,6 @@ class Site:
             file_name = file_name.replace(char, '')
 
         return file_name
-
-    def _run(self, path, chapters, threads, download):
-        args = [(i, path) for i in self._split(chapters, threads)]
-        with concurrent.futures.ThreadPoolExecutor(threads) as executor:
-            executor.map(download, args)
 
     def _verifyimg(self, image):
         '''returns False and deletes image if image is corrupted and returns True if image is fine'''
@@ -46,15 +46,26 @@ class Site:
 
         except (IOError, SyntaxError):
             os.remove(image)
-            # raise Exception('image Corrupted')
             return False
 
         return True
 
-    def _request(self, url):
-        request = Request(url)
-        for i in self.headers.keys():
-            request.add_header(i, self.headers[i])
+    async def fetch_text(self, url):
+        async with self.sem:
+            async with self.session.get(url) as resp:
+                if resp.status == 200:
+                    return await resp.text()
 
-        response = urlopen(request).read()
-        return response
+    async def fetch_image(self, url, path, maxtries=4):
+        print('url:',url)
+        async with self.sem:
+            async with self.session.get(url) as resp:
+                print('response:',resp.status)
+                if resp.status == 200:
+                    with open(path, 'wb') as fd:
+                        async for chunk in resp.content.iter_chunked(10):
+                            fd.write(chunk)
+        counter = 1
+        while not self._verifyimg(path) or counter<maxtries:
+            counter += 1
+            await self.fetch_image(url, path)

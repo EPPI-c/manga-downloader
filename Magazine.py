@@ -1,63 +1,79 @@
+import asyncio
 from os.path import join as join_path
 from os import getcwd
-
 import yaml
-
 import sites
+from sites.Site import create_site
+
+SITES={
+        'https://mangasee123': sites.Mangasee,
+        'https://mangakakalot': sites.Mangakakalot,
+        'https://manganato':sites.Manganato,
+        'https://chapmanganato.com':sites.Manganato,
+        'https://chapmanganelo.com':sites.Manganato
+        }
+
+async def create_manga(links:list, name:str, last_chapter:str|None=None):
+    manga = Manga(links, name, last_chapter)
+    await manga.init()
+    return manga
 
 class Manga():
-    def __init__(self, link:str, name:str, last_chapter:str=None, provider:str=None):
+    def __init__(self, links:list, name:str, last_chapter:str|None):
         self.name = name
-        self.link = link
+        self.links = links
         self.last_chapter = last_chapter
-        self.provider = provider
+        self.sites:list[sites.Site] = []
 
-        for link, site in {'https://mangasee123': sites.Mangasee, 'https://mangakakalot': sites.Mangakakalot, 
-        'https://manganato':sites.Manganato, 'https://chapmanganato.com':sites.Manganato, 'https://chapmanganelo.com':sites.Manganato}.items():
-            if link in self.link:
-                self.site = site(self.link, self.name)
-                break
-        else:
+    async def init(self):
+        for site_link, site in SITES.items():
+            for link in self.links:
+                if site_link in link:
+                    self.sites.append(await create_site(site, link, self.name))
+                    break
+        if not self.sites:
             raise Exception('Site not supported')
-
-    def dowload_chapters(self, chapters:list, path:str=getcwd(), threads:int=3):
-        return self.site.download_chapters(chapters, path, threads)
 
     def update_last_chapter(self, chapter_list:list):
         if not chapter_list: return 0
         self.last_chapter = chapter_list[0]['number']
 
-    def get_chapters(self, until_last:bool=True):
+    async def get_chapters(self, until_last:bool=True):
         """gets chapters of this manga"""
-        if until_last:
-            return self.site.get_chapters(self.last_chapter)
-        else:
-            return self.site.get_chapters()
+        if until_last: last = self.last_chapter
+        else: last = None
+        tasks = [asyncio.ensure_future(site.get_chapters(last)) for site in self.sites]
+        providers_chapters = await asyncio.gather(*tasks)
+        index = max((i for i in enumerate(providers_chapters)), key=lambda x:x[1][0]['number'] if x else 0)[0]
+        self.site = self.sites[index]
+        return providers_chapters[index]
+
+    async def download(self, chapter_list:list, path:str|None=None, update_last_chapter:bool=True):
+        if not chapter_list: return 0
+        if not path: path = join_path('mangas', self.name)
+        response = await self.site.download_chapters(chapter_list, path)
+        if update_last_chapter: self.last_chapter = chapter_list[0]['number']
+        return response
 
     def __dict__(self):
         """transforms object in dictionary"""
-        return {'name':self.name, 'link':self.link,'last_chapter':self.last_chapter, 'provider':self.provider}
+        return {'name':self.name, 'link':self.links,'last_chapter':self.last_chapter}
 
-    def download(self, chapter_list:list, path:str=None, threads:int=3, update_last_chapter:bool=True):
-        if not chapter_list: return 0
-        if not path: path = join_path('mangas', self.name)
-        if update_last_chapter:
-            response = self.site.download_chapters(chapter_list, path, threads)
-            self.last_chapter = chapter_list[0]['number']
-            return response
-        else:
-            return self.site.download_chapters(chapter_list, path, threads)
 
+async def create_magazine(name:str|None=None, mangas:list[Manga]|None=None, path:str|None=None):
+    magazine = Magazine(name, mangas, path)
+    await magazine.init()
+    return magazine
 
 class Magazine():
-    def __init__(self, name:str=None, mangas:list[Manga]=None, path:str=None):
+    def __init__(self, name:str|None=None, mangas:list[Manga]|None=None, path:str|None=None):
         if path:
             self.path = path
             with open(path, 'r') as f:
                 dictionary = yaml.safe_load(f)
             try:
                 self.name = dictionary['name']
-                self.mangas = [Manga(manga['link'], name, manga.get('last_chapter'), manga.get('provider')) for name, manga in dictionary['mangas'].items()]
+                self.mangas = dictionary['mangas']
             except (KeyError, AttributeError):
                 raise Exception("Magazine file is not well formatted, missing variables")
 
@@ -68,6 +84,11 @@ class Magazine():
             self.update()
 
         else: raise Exception('Must provide path or name and mangas')
+
+
+    async def init(self):
+        self.mangas = [await create_manga([manga['link']], name, manga.get('last_chapter') ) for name, manga in self.mangas.items()]
+
 
     def get_all_chapters(self, until_last:bool=True) -> dict:
         """gets chapters from all mangas in this magazine"""
@@ -82,6 +103,7 @@ class Magazine():
             manga.update_last_chapter(chapters)
 
     def update(self):
+        
         """safes the object to yaml file"""
         with open(self.path, 'w') as f:
             yaml.dump(self.__dict__(), f)
@@ -91,3 +113,16 @@ class Magazine():
             manga.download(chapters, path, threads, update_last_chapter)
         if update_last_chapter:
             self.update()
+
+async def test():
+    links = ['https://mangakakalot.com/read-zf5tb158504876104']
+    manga = await create_manga(links, 'onimai', '61')
+    chapters = await manga.get_chapters()
+    if not chapters: exit()
+    chapters = await manga.download(chapters)
+    print(chapters)
+
+
+if __name__ == "__main__":
+    asyncio.run(test())
+
