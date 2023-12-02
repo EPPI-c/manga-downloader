@@ -11,8 +11,8 @@ from .Site import Site
 
 class Mangasee(Site):#last chapter exceptions
 
-    def __init__(self, link) -> None:
-        super().__init__(link)
+    def __init__(self, link, name) -> None:
+        super().__init__(link, name)
 
     headers = {
         'authority': 'mangasee123.com',

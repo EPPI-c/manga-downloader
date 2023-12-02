@@ -13,9 +13,9 @@ class Manga():
         self.provider = provider
 
         for link, site in {'https://mangasee123': sites.Mangasee, 'https://mangakakalot': sites.Mangakakalot, 
-        'https://manganato':sites.Manganato}.items():
+        'https://manganato':sites.Manganato, 'https://chapmanganato.com':sites.Manganato, 'https://chapmanganelo.com':sites.Manganato}.items():
             if link in self.link:
-                self.site = site(self.link)
+                self.site = site(self.link, self.name)
                 break
         else:
             raise Exception('Site not supported')

@@ -7,8 +7,9 @@ from PIL import Image
 
 class Site:
 
-    def __init__(self, link) -> None:
+    def __init__(self, link, name) -> None:
         self.link = link
+        self.name = name
 
     def get_chapters(self, last_chapter=None):
         '''gets a list of chapters until last_chapter, if last_chapter is None gets all chapters'''
