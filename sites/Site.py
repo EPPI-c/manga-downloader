@@ -70,6 +70,6 @@ class Site:
                         async for chunk in resp.content.iter_chunked(10):
                             fd.write(chunk)
         counter = 1
-        while not self._verifyimg(path) or counter<maxtries:
+        while not self._verifyimg(path) and counter<maxtries:
             counter += 1
             await self.fetch_image(url, path)
