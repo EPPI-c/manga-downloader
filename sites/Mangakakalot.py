@@ -23,7 +23,7 @@ class Mangakakalot(Site):#add exceptions, last chapter, broken
             try:
                 chap_num = re.search(r'((c|C)hapter?)(_| |-)?[0-9|.]+', i['href']).group()
                 number = float(re.sub(r'((c|C)hapter?)(_| |-)?','',chap_num))
-                title = self.name + ' ' + str(number)
+                title = self.name + '-' + str(number)
             except:
                 continue
             if number == float(last_chapter):

@@ -1,18 +1,15 @@
+import asyncio
 import json
 import os
 import re
-from urllib.request import Request, urlopen
-
-import requests
 from bs4 import BeautifulSoup
-
 from .Site import Site
 
 
 class Mangasee(Site):#last chapter exceptions
 
-    def __init__(self, link, name) -> None:
-        super().__init__(link, name)
+    def __init__(self, link, name, workers) -> None:
+        super().__init__(link, name, workers)
 
     headers = {
         'authority': 'mangasee123.com',
@@ -26,80 +23,65 @@ class Mangasee(Site):#last chapter exceptions
         'sec-fetch-dest': 'document',
         'accept-language': 'en-US,en;q=0.9',
     }
-    def get_chapters(self, last_chapter) -> list:
+    async def get_chapters(self, last_chapter):
         '''gets a list of chapters until last_chapter, if last_chapter is None gets all chapters'''
         chapters = []
         name = self.link.replace('https://mangasee123.com/manga/', '')
         link = f"https://mangasee123.com/rss/{name}.xml"
-        content = self._request(link)
-        content = content.decode('UTF-8')
+        content = await self.fetch_text(link)
+        if not content: return
         soup = BeautifulSoup(content, 'html5lib')
         items = soup.find_all('item')
         for item in items:
             title = item.find('title')
             number = float(re.search(r' [+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)', title.text).group(0).removeprefix(' '))
+            title = f'{self.name}-{number}'
             if number == float(last_chapter):
                 break
-            chapters.append({'chapter_name': title.text, 'href': re.search(r'https:.*\.html', item.text).group(0), 'number':number})
+            chapters.append({'chapter_name': title, 'href': re.search(r'https:.*\.html', item.text).group(0), 'number':number})
 
         return chapters
 
-    def download_chapters(self, chapters, path, threads):
+    async def download_chapters(self, chapters, path):
         '''chapters = list with json files of chapter objects
         path = path where the chapters are going to be safed'''
-        def download(args):
-            def downloadimg(image, path):
-                r = requests.get(image, stream=True)
-                with open(path, 'wb') as f:
-                    for chunk in r:
-                        f.write(chunk)
-
-            for chapter in args[0]:
-                path = os.path.join(args[1], self._clean_file_name(chapter['chapter_name']))
-                if not os.path.exists(path):
-                    os.mkdir(path)
-                else:
-                    counter = 0
-                    cpath = path
-                    while os.path.exists(path):
-                        counter += 1
-                        path = cpath + f'({counter})'
-                    os.mkdir(path)
-                req = Request(chapter['href'])
-                for i in self.headers.keys():
-                    req.add_header(i, self.headers[i])
-                content = urlopen(req).read()
-
-                soup = BeautifulSoup(content, 'html5lib')
-                footer = re.search(r' MainFunction.* MainFunction', str(soup), re.DOTALL).group()
-                # get href
-                href = soup.find('div', attrs={'ng-if': "!vm.Edd.Active"}).find('img')['ng-src']
-
-                # get vm.CurPathName
-                CurPathName = re.search(r'vm.CurPathName = ".*"', footer).group().removeprefix('vm.CurPathName = "').removesuffix('"')
-
-                # get vm.CurChapter
-                CurChapter = re.search(r'vm.CurChapter = {.*;', footer).group().removeprefix('vm.CurChapter = ').removesuffix(';')
-                CurChapter = json.loads(CurChapter)
-
-                if CurChapter['Directory'] != "":
-                    Directory = CurChapter['Directory'] + '/'
-                else:
-                    Directory = CurChapter['Directory']
-
-                chapterimage = self.__chapter_image(CurChapter['Chapter'])
-
-                links = self.__get_links(href, CurPathName, Directory, chapterimage, CurChapter)
+        for chapter in chapters:
+            path = os.path.join(path, self._clean_file_name(chapter['chapter_name']))
+            if not os.path.exists(path):
+                os.mkdir(path)
+            else:
                 counter = 0
-                for image in links:
+                cpath = path
+                while os.path.exists(path):
                     counter += 1
-                    imgname = os.path.join(path, f'{counter}.jpg')
-                    downloadimg(image, imgname)
-                    while not self._verifyimg(imgname):
-                        downloadimg(image, imgname)
+                    path = cpath + f'({counter})'
+                os.mkdir(path)
+            content = await self.fetch_text(chapter['href'])
+            if not content: return
+            soup = BeautifulSoup(content, 'html5lib')
+            footer = re.search(r' MainFunction.* MainFunction', str(soup), re.DOTALL).group()
+            # get href
+            href = soup.find('div', attrs={'ng-if': "!vm.Edd.Active"}).find('img')['ng-src']
 
-        # self._run(path, chapters, threads, download)
-        download([chapters, path])
+            # get vm.CurPathName
+            CurPathName = re.search(r'vm.CurPathName = ".*"', footer).group().removeprefix('vm.CurPathName = "').removesuffix('"')
+
+            # get vm.CurChapter
+            CurChapter = re.search(r'vm.CurChapter = {.*;', footer).group().removeprefix('vm.CurChapter = ').removesuffix(';')
+            CurChapter = json.loads(CurChapter)
+
+            if CurChapter['Directory'] != "":
+                Directory = CurChapter['Directory'] + '/'
+            else:
+                Directory = CurChapter['Directory']
+
+            chapterimage = self.__chapter_image(CurChapter['Chapter'])
+
+            links = self.__get_links(href, CurPathName, Directory, chapterimage, CurChapter)
+
+            images = [asyncio.ensure_future(self.fetch_image(image, os.path.join(path, f'{i}.jpg')))
+                      for i, image in enumerate(links,1)]
+            await asyncio.gather(*images)
 
     def __chapter_image(self, chapterstring):
         chapter = chapterstring[1:-1]

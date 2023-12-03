@@ -1,6 +1,6 @@
 import asyncio
-from os.path import join as join_path
-from os import getcwd
+from os.path import exists as path_exists, join as join_path
+from os import getcwd, mkdir
 import yaml
 import sites
 from sites.Site import create_site
@@ -38,19 +38,27 @@ class Manga():
         if not chapter_list: return 0
         self.last_chapter = chapter_list[0]['number']
 
+    def __find_max(self, x):
+        if len(x) < 2: return 0
+        if not x[1]: return 0
+        if (n:=x[1][0].get('number')): return 0
+        return n
+
     async def get_chapters(self, until_last:bool=True):
         """gets chapters of this manga"""
         if until_last: last = self.last_chapter
         else: last = None
         tasks = [asyncio.ensure_future(site.get_chapters(last)) for site in self.sites]
         providers_chapters = await asyncio.gather(*tasks)
-        index = max((i for i in enumerate(providers_chapters)), key=lambda x:x[1][0]['number'] if x else 0)[0]
+        index = max((i for i in enumerate(providers_chapters)), key=self.__find_max)[0]
         self.site = self.sites[index]
         return providers_chapters[index]
 
     async def download(self, chapter_list:list, path:str|None=None, update_last_chapter:bool=True):
         if not chapter_list: return 0
         if not path: path = join_path('mangas', self.name)
+        if not path_exists(path):
+            mkdir(path)
         response = await self.site.download_chapters(chapter_list, path)
         if update_last_chapter: self.last_chapter = chapter_list[0]['number']
         return response
@@ -113,7 +121,7 @@ class Magazine():
         with open(self.path, 'w') as f:
             yaml.dump(self.__dict__(), f)
 
-    async def download(self, chapter_dict:dict[Manga, list], path:str=getcwd(), update_last_chapter:bool=True):
+    async def download(self, chapter_dict:dict[Manga, list], path:str, update_last_chapter:bool=True):
         tasks = [manga.download(chapters, path, update_last_chapter) for manga, chapters in chapter_dict.items()]
         await asyncio.gather(*tasks)
             
@@ -121,7 +129,7 @@ class Magazine():
             self.update()
 
 async def test():
-    links = ['https://mangakakalot.com/read-zf5tb158504876104']
+    links = ['https://mangasee123.com/manga/ONIMAI-Im-Now-Your-Sister']
     manga = await create_manga(links, 'onimai', '61')
     chapters = await manga.get_chapters()
     if not chapters: exit()
@@ -133,7 +141,7 @@ async def main():
     magazine = await create_magazine(path=PATH)
     chapters = await magazine.get_all_chapters()
 
-    await magazine.download(chapter_dict=chapters, path='mangas')
+    await magazine.download(chapters, 'mangas')
 
 
 if __name__ == "__main__":
