@@ -16,8 +16,12 @@ class Site:
         self.name = name
         self.sem = asyncio.Semaphore(workers)
 
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36',
+    }
     async def init(self):
         self.session = aiohttp.ClientSession()
+        self.session.headers.update(self.headers)
 
 
     async def get_chapters(self, last_chapter=None):

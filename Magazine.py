@@ -73,7 +73,7 @@ class Magazine():
                 dictionary = yaml.safe_load(f)
             try:
                 self.name = dictionary['name']
-                self.mangas = dictionary['mangas']
+                self.mangasdict = dictionary['mangas']
             except (KeyError, AttributeError):
                 raise Exception("Magazine file is not well formatted, missing variables")
 
@@ -87,12 +87,17 @@ class Magazine():
 
 
     async def init(self):
-        self.mangas = [await create_manga([manga['link']], name, manga.get('last_chapter') ) for name, manga in self.mangas.items()]
+        self.mangas = [await create_manga([manga['link']], name, manga.get('last_chapter') ) for name, manga in self.mangasdict.items()]
 
-
-    def get_all_chapters(self, until_last:bool=True) -> dict:
+    async def get_all_chapters(self, until_last:bool=True) -> dict:
         """gets chapters from all mangas in this magazine"""
-        return {manga: manga.get_chapters(until_last) for manga in self.mangas}
+        mangas = []
+        tasks = []
+        for manga in self.mangas:
+            tasks.append(asyncio.ensure_future(manga.get_chapters(until_last)))
+            mangas.append(manga)
+        chapter_list = await asyncio.gather(*tasks)
+        return {manga:chapters for manga, chapters in zip(mangas, chapter_list)}
 
     def __dict__(self):
         """transforms object in dictionary"""
@@ -108,9 +113,10 @@ class Magazine():
         with open(self.path, 'w') as f:
             yaml.dump(self.__dict__(), f)
 
-    def download(self, chapter_dict:dict[Manga, list], path:str=getcwd(), threads:int=3, update_last_chapter:bool=True):
-        for manga, chapters in chapter_dict.items():
-            manga.download(chapters, path, threads, update_last_chapter)
+    async def download(self, chapter_dict:dict[Manga, list], path:str=getcwd(), update_last_chapter:bool=True):
+        tasks = [manga.download(chapters, path, update_last_chapter) for manga, chapters in chapter_dict.items()]
+        await asyncio.gather(*tasks)
+            
         if update_last_chapter:
             self.update()
 
@@ -122,7 +128,14 @@ async def test():
     chapters = await manga.download(chapters)
     print(chapters)
 
+async def main():
+    PATH = join_path('magazines','myjump.yaml')
+    magazine = await create_magazine(path=PATH)
+    chapters = await magazine.get_all_chapters()
+
+    await magazine.download(chapter_dict=chapters, path='mangas')
+
 
 if __name__ == "__main__":
-    asyncio.run(test())
+    asyncio.run(main())
 
