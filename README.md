@@ -1,10 +1,1 @@
-# manga-downloader
-
-### name ideas:
-<ul>
-<li>Manga shima</li>
-<li>Breeza mangas</li>
-<li>Manga miner</li>
-<li>Hinazu</li>
-<li>Yamado/Yamad</li>
-</ul>
+some day I'll write instructions on how to use it for now just figure it out
