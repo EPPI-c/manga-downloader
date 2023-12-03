@@ -129,8 +129,8 @@ class Magazine():
             self.update()
 
 async def test():
-    links = ['https://mangasee123.com/manga/ONIMAI-Im-Now-Your-Sister']
-    manga = await create_manga(links, 'onimai', '61')
+    links = ['https://chapmanganato.com/manga-kg987489']
+    manga = await create_manga(links, 'anemone', '61')
     chapters = await manga.get_chapters()
     if not chapters: exit()
     chapters = await manga.download(chapters)
@@ -145,5 +145,5 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(test())
 
