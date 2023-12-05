@@ -95,7 +95,7 @@ class Magazine():
 
 
     async def init(self):
-        self.mangas = [await create_manga([manga['link']], name, manga.get('last_chapter') ) for name, manga in self.mangasdict.items()]
+        self.mangas = [await create_manga(manga['link'], name, manga.get('last_chapter') ) for name, manga in self.mangasdict.items()]
 
     async def get_all_chapters(self, until_last:bool=True) -> dict:
         """gets chapters from all mangas in this magazine"""
@@ -129,21 +129,20 @@ class Magazine():
             self.update()
 
 async def test():
-    links = ['https://chapmanganato.com/manga-kg987489']
-    manga = await create_manga(links, 'anemone', '61')
+    links = ['https://mangasee123.com/manga/Mikakunin-de-Shinkoukei']
+    manga = await create_manga(links, 'mikakunin', '175')
     chapters = await manga.get_chapters()
     if not chapters: exit()
-    chapters = await manga.download(chapters)
-    print(chapters)
+    print(yaml.dump(chapters))
+    # chapters = await manga.download(chapters)
 
 async def main():
     PATH = join_path('magazines','myjump.yaml')
     magazine = await create_magazine(path=PATH)
     chapters = await magazine.get_all_chapters()
-
     await magazine.download(chapters, 'mangas')
 
 
 if __name__ == "__main__":
-    asyncio.run(test())
+    asyncio.run(main())
 

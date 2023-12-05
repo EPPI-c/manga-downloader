@@ -42,11 +42,11 @@ class Mangasee(Site):#last chapter exceptions
 
         return chapters
 
-    async def download_chapters(self, chapters, path):
+    async def download_chapters(self, chapters, opath):
         '''chapters = list with json files of chapter objects
         path = path where the chapters are going to be safed'''
         for chapter in chapters:
-            path = os.path.join(path, self._clean_file_name(chapter['chapter_name']))
+            path = os.path.join(opath, self._clean_file_name(chapter['chapter_name']))
             if not os.path.exists(path):
                 os.mkdir(path)
             else:
