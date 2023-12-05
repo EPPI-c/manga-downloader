@@ -32,9 +32,9 @@ class Mangakakalot(Site):#add exceptions, last chapter, broken
 
         return chapters
 
-    async def download_chapters(self, chapters, path):# save last chapter
+    async def download_chapters(self, chapters, opath):# save last chapter
         for chapter in chapters:
-            path = os.path.join(path, self._clean_file_name(chapter['chapter_name']))
+            path = os.path.join(opath, self._clean_file_name(chapter['chapter_name']))
             if not os.path.exists(path):
                 os.mkdir(path)
             else: # create duplicate with (n)
