@@ -1,0 +1,29 @@
+#!/bin/python
+from Magazine import create_manga
+import os
+
+async def getmanga(link, name, from_chapter):
+    manga = await create_manga([link], name, from_chapter)
+
+    chapters = await manga.get_chapters()
+    if not chapters: return
+    chapters.sort(key=lambda x: x['number'])
+
+    path = f'mangas/{name}'
+    if not os.path.exists(path):
+        os.mkdir(path)
+
+    await manga.download(chapters, path)
+
+if __name__ == "__main__":
+    import asyncio
+    import sys
+
+    link = sys.argv[1]
+    name = sys.argv[2]
+    if len(sys.argv) > 3:
+        from_chapter = float(sys.argv[3])
+    else:
+        from_chapter = 0
+    print(link, name, from_chapter)
+    asyncio.run(getmanga(link, name, from_chapter))
