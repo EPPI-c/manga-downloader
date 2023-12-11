@@ -34,7 +34,7 @@ class Site:
         pass
 
     def _clean_file_name(self, file_name):
-        invalid = '<>:"/\|?* '
+        invalid = r'<>:"/\|?* '
 
         for char in invalid:
             file_name = file_name.replace(char, '')

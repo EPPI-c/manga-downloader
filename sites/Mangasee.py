@@ -3,7 +3,7 @@ from tqdm.asyncio import tqdm_asyncio
 import json
 import os
 import re
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from .Site import Site
 from utils import create_path
 
@@ -36,11 +36,16 @@ class Mangasee(Site):#last chapter exceptions
         items = soup.find_all('item')
         for item in items:
             title = item.find('title')
-            number = float(re.search(r' [+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)', title.text).group(0).removeprefix(' '))
+            number = re.search(r' [+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)', title.text)
+            if not number: continue
+            number = float(number.group(0).removeprefix(' '))
             title = f'{self.name}-{number}'
             if number <= float(last_chapter):
                 break
-            chapters.append({'chapter_name': title, 'href': re.search(r'https:.*\.html', item.text).group(0), 'number':number})
+            href = re.search(r'https:.*\.html', item.text)
+            if not href: continue
+            href = href.group(0)
+            chapters.append({'chapter_name': title, 'href': href, 'number':number})
 
         return chapters
 
@@ -51,17 +56,27 @@ class Mangasee(Site):#last chapter exceptions
             path = os.path.join(opath, self._clean_file_name(chapter['chapter_name']))
             path = create_path(path)
             content = await self.fetch_text(chapter['href'])
-            if not content: return
+            if not content: continue
             soup = BeautifulSoup(content, 'html5lib')
-            footer = re.search(r' MainFunction.* MainFunction', str(soup), re.DOTALL).group()
+            footer = re.search(r' MainFunction.* MainFunction', str(soup), re.DOTALL)
+            if not footer:continue
+            footer = footer.group()
             # get href
-            href = soup.find('div', attrs={'ng-if': "!vm.Edd.Active"}).find('img')['ng-src']
+            href = soup.find('div', attrs={'ng-if': "!vm.Edd.Active"})
+            if not href: continue
+            href = href.find('img')
+            if not isinstance(href, Tag): continue
+            href = href['ng-src']
 
             # get vm.CurPathName
-            CurPathName = re.search(r'vm.CurPathName = ".*"', footer).group().removeprefix('vm.CurPathName = "').removesuffix('"')
+            CurPathName = re.search(r'vm.CurPathName = ".*"', footer)
+            if not CurPathName: continue
+            CurPathName = CurPathName.group().removeprefix('vm.CurPathName = "').removesuffix('"')
 
             # get vm.CurChapter
-            CurChapter = re.search(r'vm.CurChapter = {.*;', footer).group().removeprefix('vm.CurChapter = ').removesuffix(';')
+            CurChapter = re.search(r'vm.CurChapter = {.*;', footer)
+            if not CurChapter: continue
+            CurChapter = CurChapter.group().removeprefix('vm.CurChapter = ').removesuffix(';')
             CurChapter = json.loads(CurChapter)
 
             if CurChapter['Directory'] != "":
