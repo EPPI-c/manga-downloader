@@ -7,7 +7,6 @@ async def getmanga(link, name, from_chapter):
 
     chapters = await manga.get_chapters()
     if not chapters: return
-    chapters.sort(key=lambda x: x['number'])
 
     path = f'mangas/{name}'
     if not os.path.exists(path):

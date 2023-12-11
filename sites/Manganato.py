@@ -1,4 +1,5 @@
 import asyncio
+from tqdm.asyncio import tqdm_asyncio
 from .Site import Site
 import re, os
 from bs4 import BeautifulSoup
@@ -49,4 +50,4 @@ class Manganato(Site):#add exceptions, last chapter, broken
             soup = soup.find_all('img')
             images = [asyncio.ensure_future(self.fetch_image(image.get('src'), os.path.join(path, f'{i}.jpg')))
                       for i, image in enumerate(soup,1)]
-            await asyncio.gather(*images)
+            await tqdm_asyncio.gather(*images, desc=f"downloading chapter: {chapter['chapter_name']}")

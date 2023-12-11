@@ -61,10 +61,8 @@ class Site:
                     return await resp.text()
 
     async def fetch_image(self, url, path, maxtries=4):
-        print('url:',url)
         async with self.sem:
             async with self.session.get(url) as resp:
-                print('response:',resp.status)
                 if resp.status == 200:
                     with open(path, 'wb') as fd:
                         async for chunk in resp.content.iter_chunked(10):

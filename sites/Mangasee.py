@@ -1,9 +1,11 @@
 import asyncio
+from tqdm.asyncio import tqdm_asyncio
 import json
 import os
 import re
 from bs4 import BeautifulSoup
 from .Site import Site
+from utils import create_path
 
 
 class Mangasee(Site):#last chapter exceptions
@@ -36,7 +38,7 @@ class Mangasee(Site):#last chapter exceptions
             title = item.find('title')
             number = float(re.search(r' [+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)', title.text).group(0).removeprefix(' '))
             title = f'{self.name}-{number}'
-            if number == float(last_chapter):
+            if number <= float(last_chapter):
                 break
             chapters.append({'chapter_name': title, 'href': re.search(r'https:.*\.html', item.text).group(0), 'number':number})
 
@@ -47,15 +49,7 @@ class Mangasee(Site):#last chapter exceptions
         path = path where the chapters are going to be safed'''
         for chapter in chapters:
             path = os.path.join(opath, self._clean_file_name(chapter['chapter_name']))
-            if not os.path.exists(path):
-                os.mkdir(path)
-            else:
-                counter = 0
-                cpath = path
-                while os.path.exists(path):
-                    counter += 1
-                    path = cpath + f'({counter})'
-                os.mkdir(path)
+            path = create_path(path)
             content = await self.fetch_text(chapter['href'])
             if not content: return
             soup = BeautifulSoup(content, 'html5lib')
@@ -81,7 +75,7 @@ class Mangasee(Site):#last chapter exceptions
 
             images = [asyncio.ensure_future(self.fetch_image(image, os.path.join(path, f'{i}.jpg')))
                       for i, image in enumerate(links,1)]
-            await asyncio.gather(*images)
+            await tqdm_asyncio.gather(*images, desc=f"downloading chapter: {chapter['chapter_name']}")
 
     def __chapter_image(self, chapterstring):
         chapter = chapterstring[1:-1]

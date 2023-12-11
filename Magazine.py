@@ -1,6 +1,9 @@
+from tqdm.asyncio import tqdm_asyncio
+import datetime
+from utils import create_path
 import asyncio
 from os.path import exists as path_exists, join as join_path
-from os import getcwd, mkdir
+from os import mkdir
 import yaml
 import sites
 from sites.Site import create_site
@@ -49,10 +52,10 @@ class Manga():
         if until_last: last = self.last_chapter
         else: last = None
         tasks = [asyncio.ensure_future(site.get_chapters(last)) for site in self.sites]
-        providers_chapters = await asyncio.gather(*tasks)
+        providers_chapters = await tqdm_asyncio.gather(*tasks, desc='getting chapters')
         index = max((i for i in enumerate(providers_chapters)), key=self.__find_max)[0]
         self.site = self.sites[index]
-        return providers_chapters[index]
+        return providers_chapters[index][::-1]
 
     async def download(self, chapter_list:list, path:str|None=None, update_last_chapter:bool=True):
         if not chapter_list: return 0
@@ -60,7 +63,7 @@ class Manga():
         if not path_exists(path):
             mkdir(path)
         response = await self.site.download_chapters(chapter_list, path)
-        if update_last_chapter: self.last_chapter = chapter_list[0]['number']
+        if update_last_chapter: self.last_chapter = chapter_list[-1]['number']
         return response
 
     def __dict__(self):
@@ -122,9 +125,11 @@ class Magazine():
             yaml.dump(self.__dict__(), f)
 
     async def download(self, chapter_dict:dict[Manga, list], path:str, update_last_chapter:bool=True):
+        s = datetime.date.today()
+        path = join_path(path, str(s))
+        path = create_path(path)
         tasks = [manga.download(chapters, path, update_last_chapter) for manga, chapters in chapter_dict.items()]
         await asyncio.gather(*tasks)
-            
         if update_last_chapter:
             self.update()
 
