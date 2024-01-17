@@ -54,6 +54,12 @@ class Site:
 
         return True
 
+    async def fetch_json(self, url):
+        async with self.sem:
+            async with self.session.get(url) as resp:
+                if resp.status == 200:
+                    return await resp.json()
+
     async def fetch_text(self, url):
         async with self.sem:
             async with self.session.get(url) as resp:

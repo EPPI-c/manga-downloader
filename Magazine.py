@@ -13,7 +13,8 @@ SITES={
         'https://mangakakalot': sites.Mangakakalot,
         'https://manganato':sites.Manganato,
         'https://chapmanganato.com':sites.Manganato,
-        'https://chapmanganelo.com':sites.Manganato
+        'https://chapmanganelo.com':sites.Manganato,
+        'https://mangadex.org':sites.Mangadex
         }
 
 async def create_manga(links:list, name:str, last_chapter:str|None=None):
