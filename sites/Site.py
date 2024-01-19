@@ -28,10 +28,25 @@ class Site:
         '''gets a list of chapters until last_chapter, if last_chapter is None gets all chapters'''
         pass
 
-    async def download_chapters(self, chapters, path):
+    async def _download_chapter(self, chapter, path):
+        pass
+
+    async def download_chapters(self, chapters, opath):
         '''chapters = list with json files of chapter objects
         path = path where the chapters are going to be safed'''
-        pass
+        for chapter in chapters:
+            path = os.path.join(opath, self._clean_file_name(chapter['chapter_name']))
+            if not os.path.exists(path):
+                os.mkdir(path)
+            else: # create duplicate with (n)
+                counter = 0
+                cpath = path
+                while os.path.exists(path):
+                    counter += 1
+                    path = cpath + f'({counter})'
+                os.mkdir(path)
+            await self._download_chapter(chapter, path)
+
 
     def _clean_file_name(self, file_name):
         invalid = r'<>:"/\|?* '

@@ -8,7 +8,7 @@ from .Site import Site
 from utils import create_path
 
 
-class Mangasee(Site):#last chapter exceptions
+class Mangasee(Site):
 
     def __init__(self, link, name, workers) -> None:
         super().__init__(link, name, workers)
@@ -40,7 +40,7 @@ class Mangasee(Site):#last chapter exceptions
             if not number: continue
             number = float(number.group(0).removeprefix(' '))
             title = f'{self.name}-{number}'
-            if number <= float(last_chapter):
+            if last_chapter and number <= float(last_chapter):
                 break
             href = re.search(r'https:.*\.html', item.text)
             if not href: continue
@@ -49,48 +49,43 @@ class Mangasee(Site):#last chapter exceptions
 
         return chapters
 
-    async def download_chapters(self, chapters, opath):
-        '''chapters = list with json files of chapter objects
-        path = path where the chapters are going to be safed'''
-        for chapter in chapters:
-            path = os.path.join(opath, self._clean_file_name(chapter['chapter_name']))
-            path = create_path(path)
-            content = await self.fetch_text(chapter['href'])
-            if not content: continue
-            soup = BeautifulSoup(content, 'html5lib')
-            footer = re.search(r' MainFunction.* MainFunction', str(soup), re.DOTALL)
-            if not footer:continue
-            footer = footer.group()
-            # get href
-            href = soup.find('div', attrs={'ng-if': "!vm.Edd.Active"})
-            if not href: continue
-            href = href.find('img')
-            if not isinstance(href, Tag): continue
-            href = href['ng-src']
+    async def _download_chapter(self, chapter, path):
+        content = await self.fetch_text(chapter['href'])
+        if not content: return
+        soup = BeautifulSoup(content, 'html5lib')
+        footer = re.search(r' MainFunction.* MainFunction', str(soup), re.DOTALL)
+        if not footer:return
+        footer = footer.group()
+        # get href
+        href = soup.find('div', attrs={'ng-if': "!vm.Edd.Active"})
+        if not href: return
+        href = href.find('img')
+        if not isinstance(href, Tag): return
+        href = href['ng-src']
 
-            # get vm.CurPathName
-            CurPathName = re.search(r'vm.CurPathName = ".*"', footer)
-            if not CurPathName: continue
-            CurPathName = CurPathName.group().removeprefix('vm.CurPathName = "').removesuffix('"')
+        # get vm.CurPathName
+        CurPathName = re.search(r'vm.CurPathName = ".*"', footer)
+        if not CurPathName: return
+        CurPathName = CurPathName.group().removeprefix('vm.CurPathName = "').removesuffix('"')
 
-            # get vm.CurChapter
-            CurChapter = re.search(r'vm.CurChapter = {.*;', footer)
-            if not CurChapter: continue
-            CurChapter = CurChapter.group().removeprefix('vm.CurChapter = ').removesuffix(';')
-            CurChapter = json.loads(CurChapter)
+        # get vm.CurChapter
+        CurChapter = re.search(r'vm.CurChapter = {.*;', footer)
+        if not CurChapter: return
+        CurChapter = CurChapter.group().removeprefix('vm.CurChapter = ').removesuffix(';')
+        CurChapter = json.loads(CurChapter)
 
-            if CurChapter['Directory'] != "":
-                Directory = CurChapter['Directory'] + '/'
-            else:
-                Directory = CurChapter['Directory']
+        if CurChapter['Directory'] != "":
+            Directory = CurChapter['Directory'] + '/'
+        else:
+            Directory = CurChapter['Directory']
 
-            chapterimage = self.__chapter_image(CurChapter['Chapter'])
+        chapterimage = self.__chapter_image(CurChapter['Chapter'])
 
-            links = self.__get_links(href, CurPathName, Directory, chapterimage, CurChapter)
+        links = self.__get_links(href, CurPathName, Directory, chapterimage, CurChapter)
 
-            images = [asyncio.ensure_future(self.fetch_image(image, os.path.join(path, f'{i}.jpg')))
-                      for i, image in enumerate(links,1)]
-            await tqdm_asyncio.gather(*images, desc=f"downloading chapter: {chapter['chapter_name']}")
+        images = [asyncio.ensure_future(self.fetch_image(image, os.path.join(path, f'{i}.jpg')))
+                  for i, image in enumerate(links,1)]
+        await tqdm_asyncio.gather(*images, desc=f"downloading chapter: {chapter['chapter_name']}")
 
     def __chapter_image(self, chapterstring):
         chapter = chapterstring[1:-1]

@@ -23,6 +23,6 @@ if __name__ == "__main__":
     if len(sys.argv) > 3:
         from_chapter = float(sys.argv[3])
     else:
-        from_chapter = 0
+        from_chapter = None
     print(link, name, from_chapter)
     asyncio.run(getmanga(link, name, from_chapter))

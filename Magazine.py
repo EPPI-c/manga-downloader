@@ -56,6 +56,7 @@ class Manga():
         providers_chapters = await tqdm_asyncio.gather(*tasks, desc='getting chapters')
         index = max((i for i in enumerate(providers_chapters)), key=self.__find_max)[0]
         self.site = self.sites[index]
+        if not providers_chapters[index]: return
         return providers_chapters[index][::-1]
 
     async def download(self, chapter_list:list, path:str|None=None, update_last_chapter:bool=True):
@@ -144,6 +145,7 @@ async def test():
 
 async def main():
     PATH = join_path('magazines','myjump.yaml')
+    PATH = 'test.yaml'
     magazine = await create_magazine(path=PATH)
     chapters = await magazine.get_all_chapters()
     await magazine.download(chapters, 'mangas')
