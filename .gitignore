@@ -5,3 +5,4 @@ myenv/
 cbz/
 cbzsplitter.py
 *.ipynb
+venv

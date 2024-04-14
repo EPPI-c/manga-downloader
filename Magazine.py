@@ -135,22 +135,10 @@ class Magazine():
         if update_last_chapter:
             self.update()
 
-async def test():
-    links = ['https://mangasee123.com/manga/Mikakunin-de-Shinkoukei']
-    manga = await create_manga(links, 'mikakunin', '175')
-    chapters = await manga.get_chapters()
-    if not chapters: exit()
-    print(yaml.dump(chapters))
-    # chapters = await manga.download(chapters)
-
-async def main():
-    PATH = join_path('magazines','myjump.yaml')
-    PATH = 'test.yaml'
-    magazine = await create_magazine(path=PATH)
-    chapters = await magazine.get_all_chapters()
-    await magazine.download(chapters, 'mangas')
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
-
+# async def test():
+#     links = ['https://mangasee123.com/manga/Mikakunin-de-Shinkoukei']
+#     manga = await create_manga(links, 'mikakunin', '175')
+#     chapters = await manga.get_chapters()
+#     if not chapters: exit()
+#     print(yaml.dump(chapters))
+#     # chapters = await manga.download(chapters)
