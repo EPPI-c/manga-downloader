@@ -1,6 +1,7 @@
 from tqdm.asyncio import tqdm_asyncio
 import asyncio
-from os import listdir, name as os_name, system as os_system
+from yaml import dump as yaml_dump
+from os import listdir, name as os_name, system as os_system, remove
 from os.path import splitext, join as join_path
 from Magazine import create_magazine
 
@@ -17,31 +18,32 @@ def menu():
             option = input("-> ")
             print('\n')
         
+            clear_screen()
             if(not option.isdigit()):
                 continue
             
             option = int(option)
 
-        clear_screen()
         if(option == 0):
             break
         elif(option == 1):
             choose_magazine()
         else:
-            pass
+            choose_standalone_manga()
         clear_screen()
 
 def choose_magazine():
 
     option = -1
     magazines = listdir('magazines')
-    while(not(option >= 0 and option <= (len(magazine) - 1))):
+    while(not(option >= 0 and option <= (len(magazines) - 1))):
         print('Choose a option:')
         magazines = [splitext(filename)[0] for filename in listdir("magazines")]
         for n,magazine in enumerate(magazines,1):
             print(f'{n} - {magazine}')
         print('0 - Return')
         option = input("-> ")
+        clear_screen()
         if(not option.isdigit()):
             continue
         option = int(option)
@@ -52,12 +54,57 @@ def choose_magazine():
         asyncio.run(download_magazine(magazines[option - 1]))
 
 
+def choose_standalone_manga():
+    
+    option = 'a'
+    while(option != ''):
+        print('*** Just Enter 0 to cancel ***')
+        print('Write the manga name, it doesn\'t have to be accurate:')
+        option = input('->')
+        if option == '0':
+            break
+        name = option
+        print('Write the link, take care to the available sites')
+        option = input('->')
+        if option == '0':
+            break
+        link = option
+        print('Write from which chapter download')
+        option = input('->')
+        if option == '0':
+            break
+        last_chapter = option
+        if not (last_chapter.isdigit() and int(last_chapter) > 0):
+            continue
+        last_chapter = int(last_chapter) - 1
+
+        data = {
+            "mangas":{
+                f"{name}": {
+                    "last_chapter": last_chapter,
+                    "link": [link],
+                    "name": name,
+                },
+            },
+            "name": "__manga",
+        }
+        
+        with open("magazines/__manga.yaml", "w") as f:
+            yaml_dump(data, f)
+        
+        asyncio.run(download_magazine('__manga'))
+
+        remove('magazines/__manga.yaml')
+        
+        break
+    
+    
 async def download_magazine(magazine_file):
     PATH = join_path('magazines',f'{magazine_file}.yaml')
     magazine = await create_magazine(path=PATH)
     chapters = await magazine.get_all_chapters()
     await magazine.download(chapters, 'mangas')
-    
+
 
 def clear_screen():
     if os_name == 'nt':
