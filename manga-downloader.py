@@ -36,7 +36,7 @@ def choose_magazine():
 
     option = -1
     magazines = listdir('magazines')
-    while(not(option >= 0 and option <= (len(magazines) - 1))):
+    while(not(option >= 0 and option <= len(magazines))):
         print('Choose a option:')
         magazines = [splitext(filename)[0] for filename in listdir("magazines")]
         for n,magazine in enumerate(magazines,1):
