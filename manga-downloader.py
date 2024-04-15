@@ -4,6 +4,7 @@ from yaml import dump as yaml_dump
 from os import listdir, name as os_name, system as os_system, remove
 from os.path import splitext, join as join_path
 from Magazine import create_magazine
+from utils import get_magazines_dir
 
 
 def menu():
@@ -35,7 +36,7 @@ def menu():
 def choose_magazine():
 
     option = -1
-    magazines = listdir('magazines')
+    magazines = listdir(get_magazines_dir())
     while(not(option >= 0 and option <= len(magazines))):
         print('Choose a option:')
         magazines = [splitext(filename)[0] for filename in listdir("magazines")]
@@ -89,18 +90,18 @@ def choose_standalone_manga():
             "name": "__manga",
         }
         
-        with open("magazines/__manga.yaml", "w") as f:
+        with open(f'{get_magazines_dir()}/__manga.yaml', 'w') as f:
             yaml_dump(data, f)
         
         asyncio.run(download_magazine('__manga'))
 
-        remove('magazines/__manga.yaml')
+        remove(f'{get_magazines_dir()}/__manga.yaml')
         
         break
     
     
 async def download_magazine(magazine_file):
-    PATH = join_path('magazines',f'{magazine_file}.yaml')
+    PATH = join_path(get_magazines_dir(),f'{magazine_file}.yaml')
     magazine = await create_magazine(path=PATH)
     chapters = await magazine.get_all_chapters()
     await magazine.download(chapters, 'mangas')

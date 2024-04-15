@@ -1,5 +1,6 @@
 #!/bin/python
 from Magazine import create_manga
+from utils import get_mangas_dir
 import os
 
 async def getmanga(link, name, from_chapter):
@@ -8,7 +9,7 @@ async def getmanga(link, name, from_chapter):
     chapters = await manga.get_chapters()
     if not chapters: return
 
-    path = f'mangas/{name}'
+    path = f'{get_mangas_dir()}/{name}'
     if not os.path.exists(path):
         os.mkdir(path)
 

@@ -1,6 +1,6 @@
 from tqdm.asyncio import tqdm_asyncio
 import datetime
-from utils import create_path
+from utils import create_path,get_magazines_dir, get_mangas_dir
 import asyncio
 from os.path import exists as path_exists, join as join_path
 from os import mkdir
@@ -61,7 +61,7 @@ class Manga():
 
     async def download(self, chapter_list:list, path:str|None=None, update_last_chapter:bool=True):
         if not chapter_list: return 0
-        if not path: path = join_path('mangas', self.name)
+        if not path: path = join_path(get_mangas_dir(), self.name)
         if not path_exists(path):
             mkdir(path)
         response = await self.site.download_chapters(chapter_list, path)
@@ -93,7 +93,7 @@ class Magazine():
         elif name and mangas:
             self.name = name
             self.mangas = mangas
-            self.path = join_path('magazines', f'{name}.yaml')
+            self.path = join_path(get_magazines_dir(), f'{name}.yaml')
             self.update()
 
         else: raise Exception('Must provide path or name and mangas')
@@ -134,11 +134,3 @@ class Magazine():
         await asyncio.gather(*tasks)
         if update_last_chapter:
             self.update()
-
-# async def test():
-#     links = ['https://mangasee123.com/manga/Mikakunin-de-Shinkoukei']
-#     manga = await create_manga(links, 'mikakunin', '175')
-#     chapters = await manga.get_chapters()
-#     if not chapters: exit()
-#     print(yaml.dump(chapters))
-#     # chapters = await manga.download(chapters)
