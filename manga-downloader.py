@@ -4,6 +4,7 @@ from yaml import dump as yaml_dump
 from os import listdir, name as os_name, system as os_system, remove
 from os.path import splitext, join as join_path
 from Magazine import create_magazine
+from generate_magazine import gen_magazine, update_magazine
 from utils import get_magazines_dir
 
 
@@ -14,7 +15,8 @@ def menu():
         while(not(option >= 0 and option <= 2)):
             print('Choose a option:')
             print('1 - Download new chapters from a magazine')
-            print('2 - Download a manga')
+            print('2 - Create a Magazine with your currently reading mangas')
+            print('3 - Download a manga')
             print('0 - Exit')
             option = input("-> ")
             print('\n')
@@ -29,6 +31,8 @@ def menu():
             break
         elif(option == 1):
             choose_magazine()
+        elif(option == 2):
+            gen_magazine()
         else:
             choose_standalone_manga()
         clear_screen()
@@ -100,8 +104,10 @@ def choose_standalone_manga():
         break
     
     
-async def download_magazine(magazine_file):
+async def download_magazine(magazine_file:str):
     PATH = join_path(get_magazines_dir(),f'{magazine_file}.yaml')
+    if '_anilist' in magazine_file:
+        update_magazine(magazine_file.removesuffix('_anilist'))
     magazine = await create_magazine(path=PATH)
     chapters = await magazine.get_all_chapters()
     await magazine.download(chapters, 'mangas')
