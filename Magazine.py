@@ -89,7 +89,6 @@ class Magazine():
             try:
                 self.name = dictionary['name']
                 self.mangasdict = dictionary['mangas']
-                self.type = dictionary['type']
             except (KeyError, AttributeError):
                 raise Exception("Magazine file is not well formatted, missing variables")
 

@@ -12,7 +12,7 @@ def menu():
     print_art()
     while(True):
         option = -1
-        while(not(option >= 0 and option <= 2)):
+        while(not(option >= 0 and option <= 3)):
             print('Choose a option:')
             print('1 - Download new chapters from a magazine')
             print('2 - Create a Magazine with your currently reading mangas')
@@ -27,13 +27,13 @@ def menu():
             
             option = int(option)
 
-        if(option == 0):
+        if option == 0:
             break
-        elif(option == 1):
+        elif option == 1:
             choose_magazine()
-        elif(option == 2):
+        elif option == 2:
             gen_magazine()
-        else:
+        elif option == 3:
             choose_standalone_manga()
         clear_screen()
 
@@ -60,7 +60,6 @@ def choose_magazine():
 
 
 def choose_standalone_manga():
-    
     option = 'a'
     while(option != ''):
         print('*** Just Enter 0 to cancel ***')

@@ -108,7 +108,6 @@ def gen_manga_list(mangas:dict,username):
     magazine = {
         'mangas':mangasdict,
         'name': username + "'s anilist",
-        'type': 'anilist'
     }
     return magazine
 
