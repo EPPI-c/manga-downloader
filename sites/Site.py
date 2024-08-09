@@ -23,7 +23,8 @@ class Site:
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36',
     }
     async def init(self):
-        self.session = aiohttp.ClientSession()
+        connector = aiohttp.TCPConnector(force_close=True)
+        self.session = aiohttp.ClientSession(connector=connector)
         self.session.headers.update(self.headers)
 
 
@@ -99,7 +100,7 @@ class Site:
                     logger.error(f'{resp.status} response for {url}')
         counter = 1
         while counter<maxtries:
-            if not self._verifyimg(path):
+            if self._verifyimg(path):
                 break
             counter += 1
             await self.fetch_image(url, path)

@@ -7,7 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='get-manga.log',
                     filemode='w',
-                    level=logging.DEBUG,
+                    level=logging.WARNING,
                     format='%(levelname)-8s %(asctime)s,%(msecs)03d [%(filename)s:%(lineno)d]\t%(message)s',
                     datefmt='%Y-%m-%d:%H:%M:%S')
 
