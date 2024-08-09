@@ -1,6 +1,9 @@
 import os
 import asyncio
 import aiohttp
+import logging
+
+logger = logging.getLogger(__name__)
 
 from PIL import Image
 
@@ -74,21 +77,31 @@ class Site:
             async with self.session.get(url) as resp:
                 if resp.status == 200:
                     return await resp.json()
+                else:
+                    logger.error(f'{resp.status} response for {url}')
 
     async def fetch_text(self, url):
         async with self.sem:
             async with self.session.get(url) as resp:
                 if resp.status == 200:
                     return await resp.text()
+                else:
+                    logger.error(f'{resp.status} response for {url}')
 
-    async def fetch_image(self, url, path, maxtries=4):
+    async def fetch_image(self, url, path, maxtries=10):
         async with self.sem:
             async with self.session.get(url) as resp:
                 if resp.status == 200:
                     with open(path, 'wb') as fd:
                         async for chunk in resp.content.iter_chunked(10):
                             fd.write(chunk)
+                else:
+                    logger.error(f'{resp.status} response for {url}')
         counter = 1
-        while not self._verifyimg(path) and counter<maxtries:
+        while counter<maxtries:
+            if not self._verifyimg(path):
+                break
             counter += 1
             await self.fetch_image(url, path)
+        else:
+            logger.warning(f'image at {path} corrupted')

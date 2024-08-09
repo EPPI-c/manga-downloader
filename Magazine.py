@@ -1,3 +1,4 @@
+import logging
 from tqdm.asyncio import tqdm_asyncio
 import datetime
 from utils import create_path,get_magazines_dir, get_mangas_dir
@@ -7,6 +8,8 @@ from os import mkdir
 import yaml
 import sites
 from sites.Site import create_site
+
+logger = logging.getLogger(__name__)
 
 SITES={
         'https://mangasee123': sites.Mangasee,
@@ -55,8 +58,11 @@ class Manga():
         tasks = [asyncio.ensure_future(site.get_chapters(last)) for site in self.sites]
         providers_chapters = await tqdm_asyncio.gather(*tasks, desc='getting chapters')
         index = max((i for i in enumerate(providers_chapters)), key=self.__find_max)[0]
+        logger.debug(f'index of providers_chapters: {index}')
         self.site = self.sites[index]
-        if not providers_chapters[index]: return
+        if not providers_chapters[index]:
+            logger.error(f'no provided {providers_chapters}')
+            return
         return providers_chapters[index][::-1]
 
     async def download(self, chapter_list:list, path:str|None=None, update_last_chapter:bool=True):

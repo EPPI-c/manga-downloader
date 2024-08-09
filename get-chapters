@@ -1,12 +1,22 @@
 #!/bin/python
 from Magazine import create_manga
 import json
+import logging
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename='get-chapters.log',
+                    filemode='w',
+                    level=logging.DEBUG,
+                    format='%(levelname)-8s %(asctime)s,%(msecs)03d [%(filename)s:%(lineno)d]\t%(message)s',
+                    datefmt='%Y-%m-%d:%H:%M:%S')
 
 async def getchapters(link, from_chapter):
     manga = await create_manga([link], 'temp', from_chapter)
 
     chapters = await manga.get_chapters()
-    if not chapters: return
+    if not chapters:
+        logger.error('no chapters')
+        return
     print(json.dumps(chapters, indent=4))
 
 if __name__ == "__main__":
