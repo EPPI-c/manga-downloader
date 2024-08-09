@@ -20,16 +20,18 @@ SITES={
         'https://mangadex.org':sites.Mangadex
         }
 
-async def create_manga(links:list, name:str, last_chapter:str|None=None):
-    manga = Manga(links, name, last_chapter)
+async def create_manga(links:list, name:str, last_chapter:str|None=None, id:str|None=None, progress:str|None=None):
+    manga = Manga(links, name, last_chapter, id, progress)
     await manga.init()
     return manga
 
 class Manga():
-    def __init__(self, links:list, name:str, last_chapter:str|None):
+    def __init__(self, links:list, name:str, last_chapter:str|None, id:str|None, progress:str|None):
+        self.id = id
         self.name = name
         self.links = links
         self.last_chapter = last_chapter
+        self.progress = progress
         self.sites:list[sites.Site] = []
 
     async def init(self):
@@ -76,7 +78,7 @@ class Manga():
 
     def __dict__(self):
         """transforms object in dictionary"""
-        return {'name':self.name, 'link':self.links,'last_chapter':self.last_chapter}
+        return {'id':self.id,'name':self.name, 'link':self.links,'last_chapter':self.last_chapter,'progress':self.progress}
 
 
 async def create_magazine(name:str|None=None, mangas:list[Manga]|None=None, path:str|None=None):
@@ -106,7 +108,13 @@ class Magazine():
 
 
     async def init(self):
-        self.mangas = [await create_manga(manga['link'], name, manga.get('last_chapter') ) for name, manga in self.mangasdict.items()]
+        self.mangas = [await create_manga(
+                            manga['link'],
+                            manga['name'],
+                            manga.get('last_chapter'),
+                            manga.get('id'),
+                            manga.get('progress'))
+                        for name, manga in self.mangasdict.items()]
 
     async def get_all_chapters(self, until_last:bool=True) -> dict:
         """gets chapters from all mangas in this magazine"""
