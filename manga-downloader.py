@@ -1,4 +1,3 @@
-from tqdm.asyncio import tqdm_asyncio
 import asyncio
 from yaml import dump as yaml_dump
 from os import listdir, name as os_name, system as os_system, remove
@@ -6,7 +5,13 @@ from os.path import splitext, join as join_path
 from Magazine import create_magazine
 from generate_magazine import gen_magazine, update_magazine
 from utils import get_magazines_dir
+import logging
 
+logging.basicConfig(filename='get-manga.log',
+                    filemode='w',
+                    level=logging.WARNING,
+                    format='%(levelname)-8s %(asctime)s,%(msecs)03d [%(filename)s:%(lineno)d]\t%(message)s',
+                    datefmt='%Y-%m-%d:%H:%M:%S')
 
 def menu():
     print_art()
@@ -50,7 +55,7 @@ def choose_magazine():
         option = input("-> ")
         clear_screen()
         if(not option.isdigit()):
-            continue
+            option = -1
         option = int(option)
 
     if(option == 0):

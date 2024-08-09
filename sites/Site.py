@@ -28,7 +28,7 @@ class Site:
         self.session.headers.update(self.headers)
 
 
-    async def get_chapters(self, last_chapter=None):
+    async def get_chapters(self, last_chapter=None) -> list | None:
         '''gets a list of chapters until last_chapter, if last_chapter is None gets all chapters'''
         pass
 

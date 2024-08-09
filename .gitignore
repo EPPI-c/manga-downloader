@@ -6,3 +6,6 @@ cbz/
 cbzsplitter.py
 *.ipynb
 venv
+*.log
+*.yaml
+*.json

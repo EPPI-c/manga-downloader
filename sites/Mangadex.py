@@ -15,7 +15,7 @@ class Mangadex(Site):
         'Referer': 'https://mangadex.org/',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36',
     }
-    async def get_chapters(self, last_chapter):
+    async def get_chapters(self, last_chapter=None):
         logger.info('start get chapters')
         id = self.link.split('/')[4]
         link = f'https://api.mangadex.org/manga/{id}/feed?limit=96&includes[]=scanlation_group&includes[]=user&order[volume]=desc&order[chapter]=desc&offset=0&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic'

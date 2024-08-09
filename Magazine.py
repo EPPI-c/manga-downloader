@@ -15,8 +15,8 @@ SITES={
         'https://mangasee123': sites.Mangasee,
         'https://mangakakalot': sites.Mangakakalot,
         'https://manganato':sites.Manganato,
-        'https://chapmanganato.com':sites.Manganato,
-        'https://chapmanganelo.com':sites.Manganato,
+        'https://chapmanganato':sites.Manganato,
+        'https://chapmanganelo':sites.Manganato,
         'https://mangadex.org':sites.Mangadex
         }
 
@@ -76,7 +76,7 @@ class Manga():
         if update_last_chapter: self.last_chapter = chapter_list[-1]['number']
         return response
 
-    def __dict__(self):
+    def to_dict(self):
         """transforms object in dictionary"""
         return {'id':self.id,'name':self.name, 'link':self.links,'last_chapter':self.last_chapter,'progress':self.progress}
 
@@ -114,7 +114,7 @@ class Magazine():
                             manga.get('last_chapter'),
                             manga.get('id'),
                             manga.get('progress'))
-                        for name, manga in self.mangasdict.items()]
+                        for manga in self.mangasdict.values()]
 
     async def get_all_chapters(self, until_last:bool=True) -> dict:
         """gets chapters from all mangas in this magazine"""
@@ -126,9 +126,9 @@ class Magazine():
         chapter_list = await asyncio.gather(*tasks)
         return {manga:chapters for manga, chapters in zip(mangas, chapter_list)}
 
-    def __dict__(self):
+    def to_dict(self):
         """transforms object in dictionary"""
-        return {'name': self.name, 'mangas':{manga.name:manga.__dict__() for manga in self.mangas}}
+        return {'name': self.name, 'mangas':{manga.name:manga.to_dict() for manga in self.mangas}}
 
     def update_last_chapter(self, chapter_dict:dict[Manga, list]):
         for manga, chapters in chapter_dict.items():
@@ -138,7 +138,7 @@ class Magazine():
         
         """safes the object to yaml file"""
         with open(self.path, 'w') as f:
-            yaml.dump(self.__dict__(), f)
+            yaml.dump(self.to_dict(), f)
 
     async def download(self, chapter_dict:dict[Manga, list], path:str, update_last_chapter:bool=True):
         s = datetime.date.today()

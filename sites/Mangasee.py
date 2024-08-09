@@ -6,6 +6,8 @@ import re
 from bs4 import BeautifulSoup, Tag
 from .Site import Site
 from utils import create_path
+import logging
+logger = logging.getLogger(__name__)
 
 
 class Mangasee(Site):
@@ -25,25 +27,31 @@ class Mangasee(Site):
         'sec-fetch-dest': 'document',
         'accept-language': 'en-US,en;q=0.9',
     }
-    async def get_chapters(self, last_chapter):
+    async def get_chapters(self, last_chapter=None):
         '''gets a list of chapters until last_chapter, if last_chapter is None gets all chapters'''
         chapters = []
         name = self.link.replace('https://mangasee123.com/manga/', '')
         link = f"https://mangasee123.com/rss/{name}.xml"
         content = await self.fetch_text(link)
-        if not content: return
+        if not content:
+            logger.error('no content')
+            return
         soup = BeautifulSoup(content, 'html5lib')
         items = soup.find_all('item')
         for item in items:
             title = item.find('title')
             number = re.search(r' [+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)', title.text)
-            if not number: continue
+            if not number:
+                logger.error('no number title: %s', title.text)
+                continue
             number = float(number.group(0).removeprefix(' '))
             title = f'{self.name}-{number}'
             if last_chapter and number <= float(last_chapter):
                 break
             href = re.search(r'https:.*\.html', item.text)
-            if not href: continue
+            if not href:
+                logger.error('no href item: %s', item.text)
+                continue
             href = href.group(0)
             chapters.append({'chapter_name': title, 'href': href, 'number':number})
 
@@ -51,26 +59,38 @@ class Mangasee(Site):
 
     async def _download_chapter(self, chapter, path):
         content = await self.fetch_text(chapter['href'])
-        if not content: return
+        if not content:
+            logger.error('no content')
+            return
         soup = BeautifulSoup(content, 'html5lib')
         footer = re.search(r' MainFunction.* MainFunction', str(soup), re.DOTALL)
-        if not footer:return
+        if not footer:
+            logger.error('no footer')
+            return
         footer = footer.group()
         # get href
         href = soup.find('div', attrs={'ng-if': "!vm.Edd.Active"})
-        if not href: return
+        if not href:
+            logger.error('no href')
+            return
         href = href.find('img')
-        if not isinstance(href, Tag): return
+        if not isinstance(href, Tag):
+            logger.error('not Tag')
+            return
         href = href['ng-src']
 
         # get vm.CurPathName
         CurPathName = re.search(r'vm.CurPathName = ".*"', footer)
-        if not CurPathName: return
+        if not CurPathName:
+            logger.error('no CurPathName footer: %s', footer)
+            return
         CurPathName = CurPathName.group().removeprefix('vm.CurPathName = "').removesuffix('"')
 
         # get vm.CurChapter
         CurChapter = re.search(r'vm.CurChapter = {.*;', footer)
-        if not CurChapter: return
+        if not CurChapter:
+            logger.error('no CurChapter footer: %s', footer)
+            return
         CurChapter = CurChapter.group().removeprefix('vm.CurChapter = ').removesuffix(';')
         CurChapter = json.loads(CurChapter)
 
