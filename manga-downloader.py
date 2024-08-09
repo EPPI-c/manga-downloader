@@ -12,7 +12,7 @@ def menu():
     print_art()
     while(True):
         option = -1
-        while(not(option >= 0 and option <= 3)):
+        while not(option >= 0 and option <= 3):
             print('Choose a option:')
             print('1 - Download new chapters from a magazine')
             print('2 - Create a Magazine with your currently reading mangas')
@@ -23,7 +23,7 @@ def menu():
         
             clear_screen()
             if(not option.isdigit()):
-                continue
+                option = -1
             
             option = int(option)
 
