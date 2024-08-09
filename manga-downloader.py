@@ -7,7 +7,7 @@ from generate_magazine import gen_magazine, update_magazine
 from utils import get_magazines_dir
 import logging
 
-logging.basicConfig(filename='get-manga.log',
+logging.basicConfig(filename='manga-downloader.log',
                     filemode='w',
                     level=logging.WARNING,
                     format='%(levelname)-8s %(asctime)s,%(msecs)03d [%(filename)s:%(lineno)d]\t%(message)s',
