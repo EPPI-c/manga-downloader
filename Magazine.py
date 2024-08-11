@@ -81,13 +81,14 @@ class Manga():
         return {'id':self.id,'name':self.name, 'link':self.links,'last_chapter':self.last_chapter,'progress':self.progress}
 
 
-async def create_magazine(name:str|None=None, mangas:list[Manga]|None=None, path:str|None=None):
-    magazine = Magazine(name, mangas, path)
+async def create_magazine(name:str|None=None, mangas:list[Manga]|None=None, path:str|None=None, isAnilist:bool|None=False):
+    magazine = Magazine(name, mangas, path, isAnilist)
     await magazine.init()
     return magazine
 
 class Magazine():
-    def __init__(self, name:str|None=None, mangas:list[Manga]|None=None, path:str|None=None):
+    def __init__(self, name:str|None=None, mangas:list[Manga]|None=None, path:str|None=None, isAnilist:bool|None=False):
+        self.isAnilist = isAnilist
         if path:
             self.path = path
             with open(path, 'r') as f:
@@ -128,6 +129,8 @@ class Magazine():
 
     def to_dict(self):
         """transforms object in dictionary"""
+        if(self.isAnilist):
+            return {'name': self.name, 'mangas':{manga.id:manga.to_dict() for manga in self.mangas}}
         return {'name': self.name, 'mangas':{manga.name:manga.to_dict() for manga in self.mangas}}
 
     def update_last_chapter(self, chapter_dict:dict[Manga, list]):
