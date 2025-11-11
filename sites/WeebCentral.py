@@ -1,4 +1,6 @@
 import asyncio
+from calendar import c
+from typing_extensions import ChainMap
 from tqdm.asyncio import tqdm_asyncio
 import json
 import os
@@ -10,13 +12,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class Mangasee(Site):
+class WeebCentral(Site):
 
     def __init__(self, link, name, workers) -> None:
         super().__init__(link, name, workers)
 
     headers = {
-        'authority': 'mangasee123.com',
+        'authority': 'weebcentral.com',
         'upgrade-insecure-requests': '1',
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36',
         'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -30,81 +32,46 @@ class Mangasee(Site):
     async def get_chapters(self, last_chapter=None):
         '''gets a list of chapters until last_chapter, if last_chapter is None gets all chapters'''
         chapters = []
-        name = self.link.replace('https://mangasee123.com/manga/', '')
-        link = f"https://mangasee123.com/rss/{name}.xml"
+        link = self.link.rsplit('/', 1)[0]
+        link += '/full-chapter-list'
         content = await self.fetch_text(link)
         if not content:
             logger.error('no content')
             return
         soup = BeautifulSoup(content, 'html5lib')
-        items = soup.find_all('item')
-        for item in items:
-            title = item.find('title')
-            number = re.search(r' [+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)', title.text)
+        chapters_elements = soup.select('a.hover\\:bg-base-300.flex-1.flex.items-center.p-2')
+        for chapter_element in chapters_elements:
+            chapter_name_element = chapter_element.select('.grow.flex.items-center.gap-2')
+            if not chapter_name_element:
+                logger.error('no number title: %s', chapter_name_element.text)
+                continue
+            title = chapter_name_element[0].select('span',class_=False)[0].text
+            number = re.search(r' [+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)', title)
             if not number:
                 logger.error('no number title: %s', title.text)
                 continue
-            number = float(number.group(0).removeprefix(' '))
-            title = f'{self.name}-{number}'
+            number = float(number.group())
             if last_chapter and number <= float(last_chapter):
                 break
-            href = re.search(r'https:.*\.html', item.text)
+            href = chapter_element['href']
             if not href:
-                logger.error('no href item: %s', item.text)
+                logger.error('no href item: %s', chapter_element.text)
                 continue
-            href = href.group(0)
             chapters.append({'chapter_name': title, 'href': href, 'number':number})
-
         return chapters
 
     async def _download_chapter(self, chapter, path):
-        content = await self.fetch_text(chapter['href'])
+        link = chapter['href']
+        link += "/images?is_prev=False&current_page=1&reading_style=long_strip"
+        content = await self.fetch_text(link)
         if not content:
             logger.error('no content')
             return
         soup = BeautifulSoup(content, 'html5lib')
-        footer = re.search(r' MainFunction.* MainFunction', str(soup), re.DOTALL)
-        if not footer:
-            logger.error('no footer')
-            return
-        footer = footer.group()
-        # get href
-        href = soup.find('div', attrs={'ng-if': "!vm.Edd.Active"})
-        if not href:
-            logger.error('no href')
-            return
-        href = href.find('img')
-        if not isinstance(href, Tag):
-            logger.error('not Tag')
-            return
-        href = href['ng-src']
-
-        # get vm.CurPathName
-        CurPathName = re.search(r'vm.CurPathName = ".*"', footer)
-        if not CurPathName:
-            logger.error('no CurPathName footer: %s', footer)
-            return
-        CurPathName = CurPathName.group().removeprefix('vm.CurPathName = "').removesuffix('"')
-
-        # get vm.CurChapter
-        CurChapter = re.search(r'vm.CurChapter = {.*;', footer)
-        if not CurChapter:
-            logger.error('no CurChapter footer: %s', footer)
-            return
-        CurChapter = CurChapter.group().removeprefix('vm.CurChapter = ').removesuffix(';')
-        CurChapter = json.loads(CurChapter)
-
-        if CurChapter['Directory'] != "":
-            Directory = CurChapter['Directory'] + '/'
-        else:
-            Directory = CurChapter['Directory']
-
-        chapterimage = self.__chapter_image(CurChapter['Chapter'])
-
-        links = self.__get_links(href, CurPathName, Directory, chapterimage, CurChapter)
-
+        img = soup.select('img')
+        img_src = [img['src'] for img in img]
         images = [asyncio.ensure_future(self.fetch_image(image, os.path.join(path, f'{i}.jpg')))
-                  for i, image in enumerate(links,1)]
+                  for i, image in enumerate(img_src,1)]
         await tqdm_asyncio.gather(*images, desc=f"downloading chapter: {chapter['chapter_name']}")
 
     def __chapter_image(self, chapterstring):

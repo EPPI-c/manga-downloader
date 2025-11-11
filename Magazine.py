@@ -12,12 +12,12 @@ from sites.Site import create_site
 logger = logging.getLogger(__name__)
 
 SITES={
-        'https://mangasee123': sites.Mangasee,
         'https://mangakakalot': sites.Mangakakalot,
         'https://manganato':sites.Manganato,
         'https://chapmanganato':sites.Manganato,
         'https://chapmanganelo':sites.Manganato,
-        'https://mangadex.org':sites.Mangadex
+        'https://mangadex.org':sites.Mangadex,
+        'https://weebcentral.com':sites.WeebCentral
         }
 
 async def create_manga(links:list, name:str, last_chapter:str|None=None, id:str|None=None, progress:str|None=None):
