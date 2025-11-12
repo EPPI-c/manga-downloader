@@ -112,7 +112,9 @@ async def download_magazine(magazine_file:str):
     PATH = join_path(get_magazines_dir(),f'{magazine_file}.json')
     if '_anilist' in magazine_file:
         await update_magazine(magazine_file.removesuffix('_anilist'))
-    magazine = await create_magazine(path=PATH)
+        magazine = await create_magazine(path=PATH, isAnilist=True)
+    else:
+        magazine = await create_magazine(path=PATH)
     chapters = await magazine.get_all_chapters()
     await magazine.download(chapters, 'mangas')
 

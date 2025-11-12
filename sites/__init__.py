@@ -1,4 +1,4 @@
-from .Mangasee import Mangasee
+from .WeebCentral import WeebCentral
 from .Mangakakalot import Mangakakalot
 from .Manganato import Manganato
 from .Mangadex import Mangadex
