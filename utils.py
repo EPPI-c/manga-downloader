@@ -1,5 +1,5 @@
 import os
-from yaml import safe_load
+import json
 
 def create_path(path):
     '''creates path without overwriting if exists but adding (n) instead'''
@@ -15,10 +15,9 @@ def create_path(path):
 
 
 def open_config():
-    with open('config.yaml', 'r') as config:
-        yaml_config = safe_load(config)
-
-    return yaml_config
+    with open('config.json', 'r') as f:
+        config = json.load(f)
+    return config
 
 
 def get_magazines_dir():

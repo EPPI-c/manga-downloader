@@ -5,7 +5,7 @@ from utils import create_path,get_magazines_dir, get_mangas_dir
 import asyncio
 from os.path import exists as path_exists, join as join_path
 from os import mkdir
-import yaml
+import json
 import sites
 from sites.Site import create_site
 
@@ -42,6 +42,9 @@ class Manga():
                     break
         if not self.sites:
             raise Exception('Site not supported')
+
+    async def test(self):
+        return await self.sites[0].test()
 
     def update_last_chapter(self, chapter_list:list):
         if not chapter_list: return 0
@@ -91,7 +94,7 @@ class Magazine():
         if path:
             self.path = path
             with open(path, 'r') as f:
-                dictionary = yaml.safe_load(f)
+                dictionary = json.load(f)
             try:
                 self.name = dictionary['name']
                 self.mangasdict = dictionary['mangas']
@@ -135,10 +138,9 @@ class Magazine():
             manga.update_last_chapter(chapters)
 
     def update(self):
-        
         """safes the object to yaml file"""
         with open(self.path, 'w') as f:
-            yaml.dump(self.to_dict(), f)
+            json.dump(self.to_dict(), f)
 
     async def download(self, chapter_dict:dict[Manga, list], path:str, update_last_chapter:bool=True):
         s = datetime.date.today()

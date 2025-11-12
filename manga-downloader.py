@@ -1,5 +1,5 @@
 import asyncio
-from yaml import dump as yaml_dump
+import json
 from os import listdir, name as os_name, system as os_system, remove
 from os.path import splitext, join as join_path
 from Magazine import create_magazine
@@ -25,11 +25,11 @@ def menu():
             print('0 - Exit')
             option = input("-> ")
             print('\n')
-        
+
             clear_screen()
             if(not option.isdigit()):
                 option = -1
-            
+
             option = int(option)
 
         if option == 0:
@@ -97,21 +97,21 @@ def choose_standalone_manga():
             },
             "name": "__manga",
         }
-        
-        with open(f'{get_magazines_dir()}/__manga.yaml', 'w') as f:
-            yaml_dump(data, f)
-        
+
+        with open(f'{get_magazines_dir()}/__manga.json', 'w') as f:
+            json.dump(data, f)
+
         asyncio.run(download_magazine('__manga'))
 
-        remove(f'{get_magazines_dir()}/__manga.yaml')
-        
+        remove(f'{get_magazines_dir()}/__manga.json')
+
         break
-    
-    
+
+
 async def download_magazine(magazine_file:str):
-    PATH = join_path(get_magazines_dir(),f'{magazine_file}.yaml')
+    PATH = join_path(get_magazines_dir(),f'{magazine_file}.json')
     if '_anilist' in magazine_file:
-        update_magazine(magazine_file.removesuffix('_anilist'))
+        await update_magazine(magazine_file.removesuffix('_anilist'))
     magazine = await create_magazine(path=PATH)
     chapters = await magazine.get_all_chapters()
     await magazine.download(chapters, 'mangas')
@@ -161,8 +161,6 @@ def print_art():
 ⠀⡼⠁⠀⠀⠀⠀⠀⠀⢀⠻⣺⣧⠀⠀⠀⠰⢢⠈⢪⡷⡀⠀⠙⡄⠀⠀⠱⡄⠀⠀⠀⢧⠀⢸⡻⠀⢠⡇⣾⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⢰⠇⠀⠀⠀⠀⠀⠀⠀⢸⠀⡏⣿⠀⠀⠀⠀⢣⢇⠀⠑⣄⠀⠀⠸⡄⠀⠀⠘⡄⠀⠀⠸⡀⢸⠁⠀⡾⢰⡏⢳⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀   
           """)
-    
-    
+
 if __name__ == "__main__":
     menu()
-

@@ -1,10 +1,9 @@
-import yaml
-import requests
 import json
-from Magazine import SITES
+import requests
+import asyncio
+from Magazine import create_manga
 
 def gen_magazine():
-    
     print('Write your anilist username: ')
     username = input('-> ')
     mangas = get_currently_reading(username)
@@ -15,31 +14,30 @@ def gen_magazine():
 
     magazine = gen_manga_list(mangas, username)
 
-    with open(f"magazines/{username}_anilist.yaml",'w') as f:
-        yaml.safe_dump(magazine,f)
+    with open(f"magazines/{username}_anilist.json",'w') as f:
+        json.dump(magazine,f)
 
 
-def update_magazine(username):
-    
+async def update_magazine(username):
     mangas = get_currently_reading(username)
 
     #ToDo Show error
     if(mangas == -1):
         return -1;
 
-    with open(f"magazines/{username}_anilist.yaml",'r') as f:
-        dictionary = yaml.safe_load(f)
+    with open(f"magazines/{username}_anilist.json",'r') as f:
+        dictionary = json.load(f)
         try:
             mangasdict:dict = dictionary['mangas']
         except (KeyError, AttributeError):
             raise Exception("Magazine file is not well formatted, missing variables")
-    
+
     for new_id, new_manga in mangas.items():
         old_manga = mangasdict.get(new_id) 
         if(not old_manga):
             title = gen_title(new_manga)
             print(f"New manga found: {title}")
-            link = get_link(title)
+            link = await get_link(title)
             if(link != 0):
                 mangasdict[new_id] = format_manga(new_manga, title, link)
         else:
@@ -47,10 +45,8 @@ def update_magazine(username):
 
     dictionary['mangas'] = mangasdict
 
-    with open(f"magazines/{username}_anilist.yaml",'w') as f:
-        yaml.safe_dump(dictionary, f)
-        
-    
+    with open(f"magazines/{username}_anilist.json",'w') as f:
+        json.dump(dictionary, f)
 
 def get_currently_reading(username):
     query = '''
@@ -76,7 +72,7 @@ def get_currently_reading(username):
 
     if(response.status_code != 200):
         return -1;
-    
+
     data = json.loads(response.text)
 
     media_list = data['data']['Page']['mediaList']
@@ -90,7 +86,7 @@ def get_currently_reading(username):
             "romaji_title": item['media']['title']['romaji'],
             "progress": item['progress']
         }
-    
+
     return mangasdict
 
 
@@ -100,7 +96,7 @@ def gen_manga_list(mangas:dict,username):
     for manga in mangas.values():
 
         title = gen_title(manga)
-        link = get_link(title)
+        link = asyncio.run(get_link(title))
 
         if(link != 0):
             mangasdict[manga['id']] = format_manga(manga, title, link) 
@@ -119,11 +115,11 @@ def gen_title(manga:dict):
         title = manga['english_title']
     else:
         title = manga['romaji_title'] + ' (' + manga['english_title']+')'
-    
+
     return title
 
 
-def get_link(title:str):
+async def get_link(title:str):
 
     print('Write the link for the manga: ' + title + ' (0 to Skip)')
     while True:
@@ -133,18 +129,15 @@ def get_link(title:str):
             return 0;
 
         try:
-            r = requests.get(link)
-            if(r.status_code != 200):
-                raise 
-        except:
+            manga = await create_manga([link], 'placeholder')
+            if not await manga.test():
+                raise
+        except Exception as e:
+            print(e)
             print('Invalid link, try again')
             continue
-    
-        for site_link, site in SITES.items():
-            if site_link in link:
-                return link
-        else:
-            print('Site not supported, try again')
+
+        return link
 
 
 def format_manga(manga:dict, title:str, link:str):

@@ -1,4 +1,4 @@
-#!/bin/python
+#!/usr/bin/env python3
 from Magazine import create_manga
 import json
 import logging

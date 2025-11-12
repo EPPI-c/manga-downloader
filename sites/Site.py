@@ -73,6 +73,14 @@ class Site:
 
         return True
 
+    async def _test(self, url):
+        async with self.sem:
+            async with self.session.get(url) as resp:
+                if resp.status == 200:
+                    return True
+                else:
+                    return False
+
     async def fetch_json(self, url):
         async with self.sem:
             async with self.session.get(url) as resp:
